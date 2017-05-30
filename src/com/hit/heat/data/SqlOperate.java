@@ -30,35 +30,41 @@ public class SqlOperate {
 			// create a connection to the database
 			conn = DriverManager.getConnection(url);
 			stat = conn.createStatement();
-			//System.out.println("Connection to SQLite has been established.");
-			//stat.executeUpdate("create table if not exists tbl1(name varchar(20), salary int);");
+			// System.out.println("Connection to SQLite has been established.");
+			// stat.executeUpdate("create table if not exists tbl1(name
+			// varchar(20), salary int);");
 			createtables();
 		} catch (SQLException e) {
 			System.out.println("database connect fail");
 			System.out.println(e.getMessage());
 		}
 	}
-	public static void createtables() throws SQLException{
-		//System.out.println("Start to create tables");
-		try{
+
+	public static void createtables() throws SQLException {
+		// System.out.println("Start to create tables");
+		try {
 			stat.executeUpdate("CREATE TABLE if not exists File(FileName varchar PRIMARY KEY,FilePath varchar);");
 			stat.executeUpdate("CREATE TABLE if not exists NodePlace(ID INTEGER PRIMARY KEY AUTOINCREMENT,"
 					+ "NodeID varchar,MeterID varchar,Place text);");
-			stat.executeUpdate("CREATE TABLE if not exists CommandCache(ID INTEGER PRIMARY KEY AUTOINCREMENT,Command varchar);");
-			stat.executeUpdate("CREATE TABLE if not exists NetMonitor(ID INTEGER PRIMARY KEY AUTOINCREMENT,NodeID varchar,"
-					+ "ParentID varchar,CPU bigint,LPM bigint,TX bigint,RX bigint,volage float,syntime int,"
-					+ "beacon int,numneighbors int,rtimetric int,reboot int,cycletime int,"
-					+ "cycletimeDirection varchar,Nodecurrenttime time,currenttime time,electric float);");
-			stat.executeUpdate("CREATE TABLE if not exists CommandDown(ID INTEGER PRIMARY KEY AUTOINCREMENT,NodeID varchar,"
-					+ "Place varchar,Command varchar);");
-			stat.executeUpdate("CREATE TABLE if not exists ApplicationData(ID INTEGER PRIMARY KEY AUTOINCREMENT,NodeID varchar,"
-					+ "currenttime time,Data varchar);");
-		}catch (SQLException e) {
+			stat.executeUpdate(
+					"CREATE TABLE if not exists CommandCache(ID INTEGER PRIMARY KEY AUTOINCREMENT,Command varchar);");
+			stat.executeUpdate(
+					"CREATE TABLE if not exists NetMonitor(ID INTEGER PRIMARY KEY AUTOINCREMENT,NodeID varchar,"
+							+ "ParentID varchar,CPU bigint,LPM bigint,TX bigint,RX bigint,volage float,syntime int,"
+							+ "beacon int,numneighbors int,rtimetric int,reboot int,cycletime int,"
+							+ "cycletimeDirection varchar,Nodecurrenttime time,currenttime time,electric float);");
+			stat.executeUpdate(
+					"CREATE TABLE if not exists CommandDown(ID INTEGER PRIMARY KEY AUTOINCREMENT,NodeID varchar,"
+							+ "Place varchar,Command varchar);");
+			stat.executeUpdate(
+					"CREATE TABLE if not exists ApplicationData(ID INTEGER PRIMARY KEY AUTOINCREMENT,NodeID varchar,"
+							+ "currenttime time,Data varchar);");
+		} catch (SQLException e) {
 			System.out.println("database create fail");
 			System.out.println(e.getMessage());
 		}
 	}
-		
+
 	/**
 	 * @param args
 	 *            the command line arguments
@@ -75,20 +81,80 @@ public class SqlOperate {
 					+ data.getSynTime() + ",'" + data.getBeacon() + "'," + data.getNum_neighbors() + ","
 					+ data.getRtmetric() + "," + data.getReboot() + "," + data.getCycleTime() + ",'"
 					+ data.getCycleTimeDirection() + "','" + data.getNodecurrenttime() + "','" + Util.getCurrentTime()
-					+ "',"+rdc_EF_Control.calCurrent(data);;
+					+ "'," + rdc_EF_Control.calCurrent(data);
+			;
 
 			stat.executeUpdate("insert into NetMonitor values (" + temp + ")");
-			//System.out.println(Util.getCurrentTime()+"append to netMonitor success"+"append values:"+temp);//for log
-			System.out.println(Util.getCurrentTime()+ " topo:"+ data.getId());
+			// System.out.println(Util.getCurrentTime()+"append to netMonitor
+			// success"+"append values:"+temp);//for log
+			System.out.println(Util.getCurrentTime() + " topo:" + data.getId());
 		} catch (SQLException e) {
 			close();
 			System.out.println("netMonitor append fail");
 			System.out.println(e.getMessage());
-			
+
 		}
 		close();
 	}
-	// 网络检测上报 //测试通过
+
+	// 网络检测表统计
+	public static int NetMonitor_count() throws SQLException {
+		ResultSet rset = stat.executeQuery("select * from NetMonitor");
+		// rset.last();
+		int count = 0;
+		String com = null;
+		while (rset.next()) {
+			com = rset.getString("ID");
+			count += 1;
+		}
+		return count;
+	}
+
+	// 网络检测上报（数量差）
+	public static void NetMonitor_count_out(int begin, String filename) throws IOException {
+		connect("jdbc:sqlite:topo3.db");
+		WriteDataToFile AppFile = null;
+		ResultSet rs;
+		AppFile = new WriteDataToFile(filename);
+		try {
+			// System.out.println(com);
+			rs = stat.executeQuery("SELECT * FROM NetMonitor where ID > '" + begin + "'");
+			while (rs.next()) {
+				int topo_ID = rs.getInt("ID");
+				String topo_NodeID = rs.getString("NodeID");
+				String topo_ParentID = rs.getString("ParentID");
+				long topo_CPU = rs.getLong("CPU");
+				long topo_LPM = rs.getLong("LPM");
+				long topo_TX = rs.getLong("TX");
+				long topo_RX = rs.getLong("RX");
+				float topo_volage = rs.getFloat("volage");
+				int topo_syntime = rs.getInt("syntime");
+				String topo_beacon = rs.getString("beacon");
+				int topo_numneighbors = rs.getInt("numneighbors");
+				int topo_rtimetric = rs.getInt("rtimetric");
+				int topo_reboot = rs.getInt("reboot");
+				int topo_cycletime = rs.getInt("cycletime");
+				String topo_cycletimeDirection = rs.getString("cycletimeDirection");
+				String topo_Nodecurrenttime = rs.getString("Nodecurrenttime");
+				String topo_currenttime = rs.getString("currenttime");
+				float topo_electric = rs.getFloat("electric");
+				AppFile.append(topo_ID + ":" + topo_NodeID + ":" + topo_ParentID + ":" + topo_CPU + ":" + topo_LPM + ":"
+						+ topo_TX + ":" + topo_RX + ":" + topo_volage + ":" + topo_syntime + ":" + topo_beacon + ":"
+						+ topo_numneighbors + ":" + topo_rtimetric + ":" + topo_reboot + ":" + topo_cycletime + ":"
+						+ topo_cycletimeDirection + ":" + topo_Nodecurrenttime + ":" + topo_currenttime + ":"
+						+ topo_electric);
+			}
+			AppFile.close();
+			rs.close();
+		} catch (SQLException e) {
+			close();
+			System.out.println(e.getMessage());
+
+		}
+		close();
+	}
+
+	// 网络检测上报（时间差） //测试通过
 	public static void topo_out(int day_length, String filename) throws IOException {
 		connect("jdbc:sqlite:topo3.db");
 		WriteDataToFile AppFile = null;
@@ -103,17 +169,18 @@ public class SqlOperate {
 			AppFile = new WriteDataToFile(filename);
 			// System.out.println(filename+"-App.txt");
 			begintime = time1 - (day_length * 24) * (1000 * 3600);
-			System.out.println(Util.getCurrentTime()+"netMonitor out from "+time1+" to "+begintime);//for log
+			System.out.println(Util.getCurrentTime() + "netMonitor out from " + time1 + " to " + begintime);// for
+																											// log
 		} catch (Exception e) {
 			close();
 			e.printStackTrace();
-			
+
 		}
 		try {
 			Date d = new Date(begintime);
 			String begint = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d);
 			String com = "SELECT * FROM NetMonitor where currenttime >= '" + begint + "'";
-			//System.out.println(com);
+			// System.out.println(com);
 			rs = stat.executeQuery("SELECT * FROM NetMonitor where currenttime >= '" + begint + "'");
 			while (rs.next()) {
 				int topo_ID = rs.getInt("ID");
@@ -145,11 +212,11 @@ public class SqlOperate {
 		} catch (SQLException e) {
 			close();
 			System.out.println(e.getMessage());
-			
+
 		}
 		close();
 	}
-	
+
 	public static void NetMonitor_drop() throws IOException {
 		connect("jdbc:sqlite:topo3.db");
 		WriteDataToFile AppFile;
@@ -158,43 +225,49 @@ public class SqlOperate {
 		Calendar cal = Calendar.getInstance();
 		long time1 = 0;
 		long begintime = 0;
-		//String Currenttime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+		// String Currenttime = new SimpleDateFormat("yyyy-MM-dd
+		// HH:mm:ss").format(new Date());
 		try {
 			cal.setTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(Currenttime));
 			time1 = cal.getTimeInMillis();
-			
-			// System.out.println(filename+"-App.txt");
-			int delete_length = 1;//配置为参数
-			begintime = time1 - (delete_length * 24) * (1000 * 3600);
-			//String duration=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(begintime))+"~"+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(time1));
 
-			//System.out.println(Util.getCurrentTime()+" ApplicationData out from "+duration);//for log
+			// System.out.println(filename+"-App.txt");
+			int delete_length = 1;// 配置为参数
+			begintime = time1 - (delete_length * 24) * (1000 * 3600);
+			// String duration=new SimpleDateFormat("yyyy-MM-dd
+			// HH:mm:ss").format(new Date(begintime))+"~"+new
+			// SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(time1));
+
+			// System.out.println(Util.getCurrentTime()+" ApplicationData out
+			// from "+duration);//for log
 		} catch (Exception e) {
 			close();
 			e.printStackTrace();
-			
+
 		}
 		try {
-			int  volume = 50;
+			int volume = 50;
 			Date d = new Date(begintime);
 			String begint = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d);
 			AppFile = new WriteDataToFile(Currenttime + "before.txt");
 			rs = stat.executeQuery("SELECT * FROM NetMonitor where currenttime < '" + begint + "'");
 			int count = 0;
-			while(rs.next())	
+			while (rs.next())
 				count += 1;
-			if(count >= volume) {
+			if (count >= volume) {
 				while (rs.next()) {
 					String A_NodeID = rs.getString("NodeID"); // Column 1
-					String A_currenttime = rs.getString("currenttime"); // Column 1
-					//String A_Data = rs.getString("ApplicationData"); // Column 1
+					String A_currenttime = rs.getString("currenttime"); // Column
+																		// 1
+					// String A_Data = rs.getString("ApplicationData"); //
+					// Column 1
 					AppFile.append(A_NodeID + ":" + A_currenttime + ":");
 				}
 			}
 			rs.close();
 			AppFile.close();
 			stat.executeUpdate("delete from NetMonitor where currenttime < '" + begint + "'");
-			System.out.println("delete from NetMonitor success");//for log
+			System.out.println("delete from NetMonitor success");// for log
 		} catch (SQLException e) {
 			close();
 			System.out.println(e.getMessage());
@@ -210,18 +283,59 @@ public class SqlOperate {
 			temp = "null,'" + NodeID + "','" + Util.getCurrentTime() + "','" + data + "'";
 
 			stat.executeUpdate("insert into ApplicationData values(" + temp + ")");
-			//System.out.println(Util.getCurrentTime()+"append to ApplicationData success"+"append values:"+temp);//for log
-			//System.out.println(Util.getCurrentTime()+" app:"+NodeID);//for log
+			// System.out.println(Util.getCurrentTime()+"append to
+			// ApplicationData success"+"append values:"+temp);//for log
+			// System.out.println(Util.getCurrentTime()+" app:"+NodeID);//for
+			// log
 		} catch (SQLException e) {
 			close();
 			System.out.println("ApplicationData append fail");
 			System.out.println(e.getMessage());
-			
+
 		}
 		close();
 	}
 
+	public static int ApplicationData_count() throws SQLException {
+		ResultSet rset = stat.executeQuery("select * from ApplicationData");
+		// rset.last();
+		int count = 0;
+		String com = null;
+		while (rset.next()) {
+			com = rset.getString("ID");
+			count += 1;
+		}
+		return count;
+	}
+
+	// 应用数据上报（数量差）
 	// 应用数据上报 //测试通过
+	public static void ApplicationData_count_out(int begin, String filename) throws IOException {
+		connect("jdbc:sqlite:topo3.db");
+		WriteDataToFile AppFile = null;
+		ResultSet rs;
+		AppFile = new WriteDataToFile(filename);
+		try {
+			// System.out.println(com);
+			rs = stat.executeQuery("SELECT * FROM ApplicationData where ID > '" + begin + "'");
+			while (rs.next()) {
+				String A_ID = rs.getString("ID");
+				String A_NodeID = rs.getString("NodeID"); // Column 1
+				String A_currenttime = rs.getString("currenttime"); // Column 1
+				String A_Data = rs.getString("Data"); // Column 1
+				AppFile.append(A_NodeID + ":" + A_currenttime + ":" + A_Data);
+			}
+			AppFile.close();
+			rs.close();
+		} catch (SQLException e) {
+			close();
+			System.out.println(e.getMessage());
+
+		}
+		close();
+	}
+
+	// 应用数据上报（时间差）//测试通过
 	public static void ApplicationData_out(int day_length, String filename) throws IOException {
 		connect("jdbc:sqlite:topo3.db");
 		WriteDataToFile AppFile = null;
@@ -231,20 +345,22 @@ public class SqlOperate {
 		long time1 = 0;
 		long begintime = 0;
 		String Currenttime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-		//System.out.println("ApplicationData out :"+Currenttime);
+		// System.out.println("ApplicationData out :"+Currenttime);
 		try {
 			cal.setTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(Currenttime));
 			time1 = cal.getTimeInMillis();
 			AppFile = new WriteDataToFile(filename);
-			System.out.println(filename+"-App.txt");
+			System.out.println(filename + "-App.txt");
 			begintime = time1 - (day_length * 24) * (1000 * 3600);
-			String duration=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(begintime))+"~"+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(time1));
+			String duration = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(begintime)) + "~"
+					+ new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(time1));
 
-			System.out.println(Util.getCurrentTime()+" ApplicationData out from "+duration);//for log
+			System.out.println(Util.getCurrentTime() + " ApplicationData out from " + duration);// for
+																								// log
 		} catch (Exception e) {
 			close();
 			e.printStackTrace();
-			
+
 		}
 		try {
 			Date d = new Date(begintime);
@@ -257,7 +373,8 @@ public class SqlOperate {
 				String A_NodeID = rs.getString("NodeID"); // Column 1
 				String A_currenttime = rs.getString("currenttime"); // Column 1
 				String A_Data = rs.getString("Data"); // Column 1
-				//System.out.println(A_ID + ":" + A_NodeID + ":" + A_currenttime + ":" + A_Data);
+				// System.out.println(A_ID + ":" + A_NodeID + ":" +
+				// A_currenttime + ":" + A_Data);
 				AppFile.append(A_NodeID + ":" + A_currenttime + ":" + A_Data);
 			}
 			AppFile.close();
@@ -265,7 +382,7 @@ public class SqlOperate {
 		} catch (SQLException e) {
 			close();
 			System.out.println(e.getMessage());
-			
+
 		}
 		close();
 	}
@@ -279,35 +396,40 @@ public class SqlOperate {
 		Calendar cal = Calendar.getInstance();
 		long time1 = 0;
 		long begintime = 0;
-		//String Currenttime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+		// String Currenttime = new SimpleDateFormat("yyyy-MM-dd
+		// HH:mm:ss").format(new Date());
 		try {
 			cal.setTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(Currenttime));
 			time1 = cal.getTimeInMillis();
-			
-			// System.out.println(filename+"-App.txt");
-			int delete_length = 1;//配置为参数
-			begintime = time1 - (delete_length * 24) * (1000 * 3600);
-			//String duration=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(begintime))+"~"+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(time1));
 
-			//System.out.println(Util.getCurrentTime()+" ApplicationData out from "+duration);//for log
+			// System.out.println(filename+"-App.txt");
+			int delete_length = 1;// 配置为参数
+			begintime = time1 - (delete_length * 24) * (1000 * 3600);
+			// String duration=new SimpleDateFormat("yyyy-MM-dd
+			// HH:mm:ss").format(new Date(begintime))+"~"+new
+			// SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(time1));
+
+			// System.out.println(Util.getCurrentTime()+" ApplicationData out
+			// from "+duration);//for log
 		} catch (Exception e) {
 			close();
 			e.printStackTrace();
-			
+
 		}
 		try {
-			int  volume = 50;
+			int volume = 50;
 			Date d = new Date(begintime);
 			String begint = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d);
 			AppFile = new WriteDataToFile(Currenttime + "before.txt");
 			rs = stat.executeQuery("SELECT * FROM ApplicationData where currenttime < '" + begint + "'");
 			int count = 0;
-			while(rs.next())	
+			while (rs.next())
 				count += 1;
-			if(count >= volume) {
+			if (count >= volume) {
 				while (rs.next()) {
 					String A_NodeID = rs.getString("NodeID"); // Column 1
-					String A_currenttime = rs.getString("currenttime"); // Column 1
+					String A_currenttime = rs.getString("currenttime"); // Column
+																		// 1
 					String A_Data = rs.getString("ApplicationData"); // Column 1
 					AppFile.append(A_NodeID + ":" + A_currenttime + ":" + A_Data);
 				}
@@ -315,12 +437,12 @@ public class SqlOperate {
 			rs.close();
 			AppFile.close();
 			stat.executeUpdate("delete from ApplicationData where currenttime < '" + begint + "'");
-			System.out.println("delete from ApplicationData success");//for log
+			System.out.println("delete from ApplicationData success");// for log
 		} catch (SQLException e) {
 			close();
 			System.out.println(e.getMessage());
 		}
-		//System.out.println("close the database");
+		// System.out.println("close the database");
 		close();
 	}
 
@@ -330,13 +452,13 @@ public class SqlOperate {
 		try {
 			String temp = null;
 			temp = "null,'" + NodeID + "','" + Place + "','" + Message + "'";
-			//System.out.println("commanddown append values:"+temp);//for log
+			// System.out.println("commanddown append values:"+temp);//for log
 			stat.executeUpdate("insert into CommandDown values (" + temp + ")");
-			//System.out.println("insert into CommandDown success");//for log
+			// System.out.println("insert into CommandDown success");//for log
 		} catch (SQLException e) {
 			close();
 			System.out.println(e.getMessage());
-			
+
 		}
 		close();
 	}
@@ -351,7 +473,7 @@ public class SqlOperate {
 			// TODO Auto-generated catch block
 			close();
 			e.printStackTrace();
-			
+
 		}
 		try {
 			rs = stat.executeQuery("SELECT * FROM CommandDown");
@@ -366,7 +488,7 @@ public class SqlOperate {
 		} catch (SQLException e) {
 			close();
 			System.out.println(e.getMessage());
-			
+
 		}
 		close();
 	}
@@ -374,7 +496,7 @@ public class SqlOperate {
 	// 缓存数据表判满 //测试通过
 	public static boolean CommandCache_full() throws SQLException {
 		int count = CommandCache_count();
-		System.out.println(Util.getCurrentTime()+"CommandCache_count="+count);
+		System.out.println(Util.getCurrentTime() + "CommandCache_count=" + count);
 		if (count < 10) {
 			System.out.println("the commandCache is not full");
 			return true;
@@ -416,15 +538,16 @@ public class SqlOperate {
 			if (CommandCache_full()) {
 				String temp = null;
 				temp = "null,'" + Message + "'";
-				//System.out.println();//for log
+				// System.out.println();//for log
 
 				stat.executeUpdate("insert into CommandCache values (" + temp + ");");
-				System.out.println(Util.getCurrentTime()+" insert into CommandCache "+" command values:"+temp);//for log
+				System.out.println(Util.getCurrentTime() + " insert into CommandCache " + " command values:" + temp);// for
+																														// log
 			}
 		} catch (SQLException e) {
 			close();
 			System.out.println(e.getMessage());
-			
+
 		}
 		close();
 	}
@@ -446,32 +569,33 @@ public class SqlOperate {
 				rs.close();
 				stat.executeUpdate("delete from CommandCache where ID=" + first);
 			} else {
-				System.out.println(Util.getCurrentTime()+" CommandCache is empty");
+				System.out.println(Util.getCurrentTime() + " CommandCache is empty");
 				Command = "500000";
 			}
 		} catch (SQLException e) {
 			close();
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			
+
 		}
 		close();
 		return Command;
 	}
 
 	// 添加数据到节点位置表
-	public static void NodePlace_a(String NodeID,String MeterID,String Place) {
+	public static void NodePlace_a(String NodeID, String MeterID, String Place) {
 		connect("jdbc:sqlite:topo3.db");
 		try {
 			String temp = null;
-			temp = "null,'" + NodeID + "','" + MeterID +"','"+ Place + "'";
+			temp = "null,'" + NodeID + "','" + MeterID + "','" + Place + "'";
 
 			stat.executeUpdate("insert into NodePlace values (" + temp + ")");
-			//System.out.println(Util.getCurrentTime()+"insert into NodePlace success"+" values:"+temp);//for log
+			// System.out.println(Util.getCurrentTime()+"insert into NodePlace
+			// success"+" values:"+temp);//for log
 		} catch (SQLException e) {
 			close();
 			System.out.println(e.getMessage());
-			
+
 		}
 		close();
 	}
@@ -484,15 +608,17 @@ public class SqlOperate {
 			temp = "'" + FileName + "','" + FilePath + "'";
 
 			stat.executeUpdate("insert into File values(" + temp + ")");
-			//System.out.println(Util.getCurrentTime()+"insert into File success"+"append values:"+temp);//for log
+			// System.out.println(Util.getCurrentTime()+"insert into File
+			// success"+"append values:"+temp);//for log
 			// c.execute('''CREATE TABLE topo
 		} catch (SQLException e) {
 			close();
 			System.out.println(e.getMessage());
-			
+
 		}
 		close();
 	}
+
 	public static void close() {
 		try {
 			conn.close();
@@ -507,35 +633,35 @@ public class SqlOperate {
 	 *            the command line arguments
 	 */
 	public static void main(String[] args) {
-		//connect("jdbc:sqlite:topo3.db");
-		//commandCache_a("100000");
-//		try {
-//			topo_out(2,"NetMonitor-out");
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-		//close();
+		// connect("jdbc:sqlite:topo3.db");
+		// commandCache_a("100000");
+		// try {
+		// topo_out(2,"NetMonitor-out");
+		// } catch (IOException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
+		// close();
 		// String Command = CommandCache_get();
-		//commanddown_a("1", "1", "110000");
+		// commanddown_a("1", "1", "110000");
 		connect("jdbc:sqlite:topo3.db");
 		int i = 0;
 		long start = System.currentTimeMillis();
-		for(i = 0;i<1000;i++){
+		for (i = 0; i < 1000; i++) {
 			try {
 				CommandCache_full();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			//NodePlace_a("111","123","1234");
-		//ApplicationData_out(12,"2017-04-27*7:42:11");
-		//commanddown_a("111","1234567890","1234567");
-			//ApplicationData_a("111","2017-04-27 7:42:11","1111");
+			// NodePlace_a("111","123","1234");
+			// ApplicationData_out(12,"2017-04-27*7:42:11");
+			// commanddown_a("111","1234567890","1234567");
+			// ApplicationData_a("111","2017-04-27 7:42:11","1111");
 		}
 		close();
 		long end = System.currentTimeMillis();
-		long time = end-start;
+		long time = end - start;
 		System.out.println(time);
 	}
 }

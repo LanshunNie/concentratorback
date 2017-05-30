@@ -355,17 +355,17 @@ public class Util {
 		sb.append(String.format("%d", bytes[index]));
 		return sb.toString().substring(3);
 	}
-    public static byte[] formatByteStrBitmapToBytes(String st)
-    {
-    	byte[] result=new byte[18];
-		st=(String) st.subSequence(1, st.length()-1);
-		String[] strArray=st.split(",");
-		for(int i=0;i<strArray.length;i++)
-		{
-			result[i]=(byte)((int)Integer.valueOf(strArray[i].trim()));
-		} 
+
+	public static byte[] formatByteStrBitmapToBytes(String st) {
+		byte[] result = new byte[18];
+		st = (String) st.subSequence(1, st.length() - 1);
+		String[] strArray = st.split(",");
+		for (int i = 0; i < strArray.length; i++) {
+			result[i] = (byte) ((int) Integer.valueOf(strArray[i].trim()));
+		}
 		return result;
-    }
+	}
+
 	public static byte[] formatByteStrToByte(String str) {
 		int length = str.length();
 		// System.out.println(length);
@@ -462,12 +462,10 @@ public class Util {
 	 * @return
 	 * @throws JSONException
 	 */
-	public static void writeSynConfigParamToFile(SynParameter synParameter, String path)  {
-		
-//		System.out.println("000000000000000000");
-		
-	 
-		
+	public static void writeSynConfigParamToFile(SynParameter synParameter, String path) {
+
+		// System.out.println("000000000000000000");
+
 		JSONObject object = new JSONObject();
 		try {
 
@@ -480,24 +478,23 @@ public class Util {
 
 			object.put("bitmap", synParameter.getBitmap());
 			object.put("state", synParameter.isFlag());
-			
+
 			try {
 				BufferedWriter bufferedWriter;
 				bufferedWriter = new BufferedWriter(new FileWriter(new File(path)));
 				bufferedWriter.write(object.toString());
 				bufferedWriter.flush();
 				bufferedWriter.close();
-//				System.out.println("aaaaaaaaaaaaaaaaaaaaaaa");
+				// System.out.println("aaaaaaaaaaaaaaaaaaaaaaa");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		
-					
-			//System.out.println("ffffffffffffffffff");
+
+			// System.out.println("ffffffffffffffffff");
 		} catch (JSONException e) {
 			// TODO 自动生成的 catch 块
-			//System.out.println("bbbbbbbbbbbbbbbbbbbb");
+			// System.out.println("bbbbbbbbbbbbbbbbbbbb");
 			e.printStackTrace();
 		}
 	}
@@ -518,7 +515,7 @@ public class Util {
 			JSONArray array = json.getJSONArray("data");
 			List<Location> ret = new ArrayList<Location>();
 			for (int i = 0; i < array.length(); ++i) {
-				//System.out.println(array.get(i).toString());
+				// System.out.println(array.get(i).toString());
 				ret.add(Location.parseFromJsonObject(array.getJSONObject(i), (i + 1)));
 			}
 			return ret;
@@ -599,7 +596,7 @@ public class Util {
 
 	public static String getIpv6LastByte(String ipv6) {
 		String lastSector = ipv6.trim().substring(ipv6.lastIndexOf(":") + 1);
-		//System.out.println(lastSector);
+		// System.out.println(lastSector);
 		if (lastSector.length() >= 2) {
 			return lastSector.substring(lastSector.length() - 2);
 		}
@@ -608,7 +605,7 @@ public class Util {
 
 	public static String getIpv6LastByte2(String ipv6) {
 		String lastSector = ipv6.trim().substring(ipv6.lastIndexOf(":") + 1);
-		//System.out.println(lastSector);
+		// System.out.println(lastSector);
 		if (lastSector.length() >= 2) {
 			return lastSector.substring(lastSector.length() - 2);
 		}
@@ -724,6 +721,7 @@ public class Util {
 		systemParam.setSysWaitRetransDelay(object.getInt("waitRetransDelay"));
 		return systemParam;
 	}
+
 	public static double getDistance(Point p1, Point p2) {
 		return p1.distance(p2);
 	}
@@ -795,7 +793,7 @@ public class Util {
 					message = message.concat(str1);
 					message = message.concat(Util.Check(message));
 					message = message.concat("16");
-					//System.out.println(message);
+					// System.out.println(message);
 					remoteClient.asyncWriteAndFlush(message);
 					seq0++;
 					if (seq0 == 256) {// FF
@@ -833,7 +831,7 @@ public class Util {
 					message = message.concat(str1);
 					message = message.concat(Util.Check(message));
 					message = message.concat("16");
-					//System.out.println(message);
+					// System.out.println(message);
 					if (receiving_frag) {
 					} else {
 						remoteClient.asyncWriteAndFlush(message);
@@ -1082,7 +1080,7 @@ public class Util {
 		// System.arraycopy(message,
 		// GlobalDefines.GlobalCollectView.G_DEF_CRO_TIME_HOUR,
 		// currenttime, 0, 1);
-		//System.out.println(currenttime + "!!!");
+		// System.out.println(currenttime + "!!!");
 		// 時間同步 1字節
 		byte SynTime = message[GlobalDefines.GlobalCollectView.G_DEF_ENERGY_SYNTIME];
 
@@ -1091,7 +1089,7 @@ public class Util {
 		String NodeID = selfId.split(":")[selfId.split(":").length - 1];
 		int i = 0;
 		int lengthing = NodeID.length();
-		for(i = 0;i<4-lengthing;i++){
+		for (i = 0; i < 4 - lengthing; i++) {
 			NodeID = "0" + NodeID;
 		}
 		Energy ene = new Energy(NodeID, getLong(CPU_time), getLong(LPM_time), getLong(Send_time), getLong(Receive_time),
@@ -1112,166 +1110,40 @@ public class Util {
 		int inbyte = count % 8;
 		// System.out.println(hour+","+minute+","+count+","+index+","+inbyte);
 		// System.out.println(bitmap[index]);
-		//System.out.println(bitmap[index] >> inbyte);
+		// System.out.println(bitmap[index] >> inbyte);
 		if ((bitmap[index] >> inbyte) % 2 == 1) {
-			//System.out.println("true");
+			// System.out.println("true");
 			return true;
 		} else
 			return false;
+	}
+
+	public static int StatusJuage(boolean online) {
+		String datetime = getCurrentDateTime();
+		String[] times = datetime.split(":");
+		// int hour = Integer.parseInt(times[0]);
+		int minute = Integer.parseInt(times[1]);
+		int second = 0;
+		int time = second + minute * 60;
+		int flag = 0;
+		if (online) {
+			if (time < 20)
+				flag = 1;
+			else if (time > 20 && time < 300)
+				flag = 2;
+		} else {
+			if (time < 330)
+				flag = 3;
+			else if (time >= 330 && time < 480)
+				flag = 4;
+			else if (time >= 480 && time < 600)
+				flag = 5;
+		}
+		return flag;
 	}
 
 	public static void main(String[] args) throws IOException, JSONException {
 		byte[] bitmap = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 16, 1, 1, 1, 1, 1, 1 };
 		Online_Judge(bitmap);
 	}
-	// {
-	// // byte high = (byte)0x0ff;
-	// // byte low = (byte)0xff;
-	// // int id = byteToInt(high,low);
-	// // System.out.println(id);
-	// // System.out.println(intToHexStr(id));
-	// String ipv6 = "aaaa::19";
-	// System.out.println(getIpv6LastByte(ipv6));
-	//
-	// Map<String, Node> map = new LinkedHashMap<String, Node>();
-	// Util.updateTopNodesMap(map, "1f", null);
-	// Util.updateTopNodesMap(map, "1a", "1f");
-	// Util.updateTopNodesMap(map, "1b", "1a");
-	// Util.updateTopNodesMap(map, "1c", "1b");
-	// Util.updateTopNodesMap(map, "1d", "1c");
-	// System.out.println(map.keySet().toString());
-	// Point ep = new Point(0, 0);
-	// Point sp = new Point(10, 10);
-	// System.out.println(getPointAwayFromRadius(sp, ep, 3));
-	// String ip = "FF80:1::1";
-	// String ip1 = "aaaa::12:7400:1:1b";
-	// System.out.println(Util.verifyIPv6(ip1));
-	// System.out.println(Util.formatToCompIpv6(ip1));
-	// System.out.println(ipv6Equals(ip1,"aaaa:0:0:0:12:7400:1:1b"));
-	// byte[] bytes = {0x10,0x5B,(byte) 0xFE,0x59,0x16,0x1};
-	// String str = Util.formatByteToByteStr(bytes);
-	// System.out.println(str);
-	// byte[] src_bytes = Util.formatByteStrToByte(str);
-	// System.out.println(Util.formatBytesToStr(src_bytes));
-
-	// System.out.println(Util.formatToSimpIpv6(ip));
-	// System.out.println(Util.verifyIPv6(ip));
-	// String path = "rooms.json";
-	// readRoomInforsForFile(path);
-	// List<FloorInfor> floors = new ArrayList<FloorInfor>();
-	// List<RoomInfor> rooms = new ArrayList<RoomInfor>();
-	//
-	// rooms.add(new RoomInfor("513", new Point(120,20)).setLtPoint(new
-	// Point(86,28)).setWidth(93).setHeight(142));
-	// rooms.add(new RoomInfor("511", new Point(215,20)).setLtPoint(new
-	// Point(183,28)).setWidth(89).setHeight(142));
-	// rooms.add(new RoomInfor("509", new Point(305,20)).setLtPoint(new
-	// Point(277,28)).setWidth(84).setHeight(142));
-	// rooms.add(new RoomInfor("507", new Point(395,20)).setLtPoint(new
-	// Point(366,28)).setWidth(82).setHeight(142));
-	// rooms.add(new RoomInfor("505", new Point(485,20)).setLtPoint(new
-	// Point(454,28)).setWidth(84).setHeight(142));
-	// rooms.add(new RoomInfor("503", new Point(575,20)).setLtPoint(new
-	// Point(544,28)).setWidth(88).setHeight(142));
-	// rooms.add(new RoomInfor("501", new Point(670,20)).setLtPoint(new
-	// Point(637,28)).setWidth(89).setHeight(142));
-	// rooms.add(new RoomInfor("514", new Point(120,460)).setLtPoint(new
-	// Point(90,291)).setWidth(89).setHeight(142));
-	// rooms.add(new RoomInfor("512", new Point(210,460)).setLtPoint(new
-	// Point(183,291)).setWidth(89).setHeight(142));
-	// rooms.add(new RoomInfor("510", new Point(305,460)).setLtPoint(new
-	// Point(277,291)).setWidth(82).setHeight(142));
-	// rooms.add(new RoomInfor("508", new Point(390,460)).setLtPoint(new
-	// Point(363,291)).setWidth(80).setHeight(142));
-	// rooms.add(new RoomInfor("506", new Point(480,460)).setLtPoint(new
-	// Point(445,291)).setWidth(89).setHeight(142));
-	// rooms.add(new RoomInfor("504", new Point(575,460)).setLtPoint(new
-	// Point(543,291)).setWidth(89).setHeight(142));
-	// rooms.add(new RoomInfor("502", new Point(670,460)).setLtPoint(new
-	// Point(639,291)).setWidth(84).setHeight(142));
-	//
-	// FloorInfor floorInfor1 = new FloorInfor("新技术楼5楼",
-	// "images/location_pane1.png", rooms);
-	// floors.add(floorInfor1);
-	// List<RoomInfor> rooms2 = new ArrayList<RoomInfor>();
-	// rooms2.add(new RoomInfor("613", new Point(120,20)).setLtPoint(new
-	// Point(86,28)).setWidth(93).setHeight(142));
-	// rooms2.add(new RoomInfor("611", new Point(215,20)).setLtPoint(new
-	// Point(183,28)).setWidth(89).setHeight(142));
-	// rooms2.add(new RoomInfor("609", new Point(305,20)).setLtPoint(new
-	// Point(277,28)).setWidth(84).setHeight(142));
-	// rooms2.add(new RoomInfor("607", new Point(395,20)).setLtPoint(new
-	// Point(366,28)).setWidth(82).setHeight(142));
-	// rooms2.add(new RoomInfor("605", new Point(485,20)).setLtPoint(new
-	// Point(454,28)).setWidth(84).setHeight(142));
-	// rooms2.add(new RoomInfor("603", new Point(575,20)).setLtPoint(new
-	// Point(544,28)).setWidth(88).setHeight(142));
-	// rooms2.add(new RoomInfor("601", new Point(670,20)).setLtPoint(new
-	// Point(637,28)).setWidth(89).setHeight(142));
-	// rooms2.add(new RoomInfor("614", new Point(120,460)).setLtPoint(new
-	// Point(90,291)).setWidth(89).setHeight(142));
-	// rooms2.add(new RoomInfor("612", new Point(210,460)).setLtPoint(new
-	// Point(183,291)).setWidth(89).setHeight(142));
-	// rooms2.add(new RoomInfor("610", new Point(305,460)).setLtPoint(new
-	// Point(277,291)).setWidth(82).setHeight(142));
-	// rooms2.add(new RoomInfor("608", new Point(390,460)).setLtPoint(new
-	// Point(363,291)).setWidth(80).setHeight(142));
-	// rooms2.add(new RoomInfor("606", new Point(480,460)).setLtPoint(new
-	// Point(445,291)).setWidth(89).setHeight(142));
-	// rooms2.add(new RoomInfor("604", new Point(575,460)).setLtPoint(new
-	// Point(543,291)).setWidth(89).setHeight(142));
-	// rooms2.add(new RoomInfor("602", new Point(670,460)).setLtPoint(new
-	// Point(639,291)).setWidth(84).setHeight(142));
-	// FloorInfor floorInfor2 = new FloorInfor("新技术楼6楼", "images\\location.jpg",
-	// rooms2);
-	// floors.add(floorInfor2);
-	// List<RoomInfor> rooms3 = new ArrayList<RoomInfor>();
-	// rooms3.add(new RoomInfor("713", new Point(120,20)).setLtPoint(new
-	// Point(86,28)).setWidth(93).setHeight(142));
-	// rooms3.add(new RoomInfor("711", new Point(215,20)).setLtPoint(new
-	// Point(183,28)).setWidth(89).setHeight(142));
-	// rooms3.add(new RoomInfor("709", new Point(305,20)).setLtPoint(new
-	// Point(277,28)).setWidth(84).setHeight(142));
-	// rooms3.add(new RoomInfor("707", new Point(395,20)).setLtPoint(new
-	// Point(366,28)).setWidth(82).setHeight(142));
-	// rooms3.add(new RoomInfor("705", new Point(485,20)).setLtPoint(new
-	// Point(454,28)).setWidth(84).setHeight(142));
-	// rooms3.add(new RoomInfor("703", new Point(575,20)).setLtPoint(new
-	// Point(544,28)).setWidth(88).setHeight(142));
-	// rooms3.add(new RoomInfor("701", new Point(670,20)).setLtPoint(new
-	// Point(637,28)).setWidth(89).setHeight(142));
-	// rooms3.add(new RoomInfor("714", new Point(120,460)).setLtPoint(new
-	// Point(90,291)).setWidth(89).setHeight(142));
-	// rooms3.add(new RoomInfor("712", new Point(210,460)).setLtPoint(new
-	// Point(183,291)).setWidth(89).setHeight(142));
-	// rooms3.add(new RoomInfor("710", new Point(305,460)).setLtPoint(new
-	// Point(277,291)).setWidth(82).setHeight(142));
-	// rooms3.add(new RoomInfor("708", new Point(390,460)).setLtPoint(new
-	// Point(363,291)).setWidth(80).setHeight(142));
-	// rooms3.add(new RoomInfor("706", new Point(480,460)).setLtPoint(new
-	// Point(445,291)).setWidth(89).setHeight(142));
-	// rooms3.add(new RoomInfor("704", new Point(575,460)).setLtPoint(new
-	// Point(543,291)).setWidth(89).setHeight(142));
-	// rooms3.add(new RoomInfor("702", new Point(670,460)).setLtPoint(new
-	// Point(639,291)).setWidth(84).setHeight(142));
-	// FloorInfor floorInfor3 = new FloorInfor("新技术楼7楼", "images\\location.jpg",
-	// rooms3);
-	// floors.add(floorInfor3);
-	// writeRoomInforToFile(path, floors);
-	// List<FloorInfor> floorInfors = readRoomInforsForFile(path);
-	// for(FloorInfor floor : floorInfors){
-	// System.out.println(floor.toString());
-	// }
-	// System.out.println(verifyIntegerStr("1234sa"));
-	// System.out.println(verifyDoubleStr("0da.123"));
-	// SystemParam systemParam = new SystemParam();
-	// writeSystemParamToFile(systemParam, "sysparam.json");
-	// SystemParam systemParam2 = parseSystemParamFromFile("sysparam.json");
-	// System.out.println(systemParam.toString());
-	// System.out.println(systemParam2.toString());
-	// Point p1 = new Point(0, 0);
-	// Point p2 = new Point(3, 4);
-	// System.out.println(Util.getDistance(p1, p2));
-	// System.out.println(RandomInt(400) + 240);
-	// }
 }
