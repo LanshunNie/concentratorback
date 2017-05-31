@@ -560,8 +560,21 @@ public class ConsoleMainServer {
 		// System.out.println("start consentrator heartbeat");// for log
 		// System.out.println("start heart beat:" + parameter.getupperAddr() +
 		// parameter.getupperPort());// for
-
-		byte[] mesge = { 1, 2, 4, 5 };
+		byte[] currenttime = Util.formatByteStrToByte(Util.getCurrentTime());
+		boolean flag = Util.Online_Judge(synParameter.getBitmap());
+		byte status = (byte)Util.StatusJuage(flag);
+		byte[] centor = Util.formatByteStrToByte(parameter.getId());
+		try {
+			int cache_number = (byte)SqlOperate.CommandCache_count();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		byte[] mesge = new byte[14];
+		System.arraycopy(currenttime, 0, mesge, 0, currenttime.length);
+		System.arraycopy(flag, 0, mesge, currenttime.length, 1);
+		System.arraycopy(centor, 0, mesge, currenttime.length+1, centor.length);
+		System.arraycopy(status,0, mesge, currenttime.length+1+centor.length, 1);
 		try {
 			SendToupperMessage(mesge);
 			System.out.println(Util.getCurrentTime() + " 发送心跳包以保持GPRS在线!");
@@ -1331,7 +1344,29 @@ public class ConsoleMainServer {
 	}
 
 	// 时间差计算
-	public int time_diffence(int active) {
+	public byte[] getbit() {
+		String currenttime = Util.getCurrentTime();
+		String[] times = currenttime.split(":");
+		int hour = Integer.parseInt(times[0]);
+		int minute = Integer.parseInt(times[1]);
+		byte[] bit = new byte[144];
+		byte[] bitmap = new byte[18];
+		bitmap = synParameter.getBitmap();
+		int i, j, t = 0;
+		byte bitmap_a = 0;
+		for (i = 0; i < 18; i++) {
+			bitmap_a = bitmap[i];
+			for (j = 0; j < 8; j++) {
+				bit[t] = (byte) (bitmap_a & 1);
+				bitmap_a = (byte) (bitmap_a >> 1);
+				System.out.println(t + " " + bit[t]);
+				t++;
+			}
+		}
+		return bit;
+	}
+
+	public int time_diffence(int active, byte[] bit) {
 		int difference = 0;
 		String currenttime = Util.getCurrentTime();
 		String[] times = currenttime.split(":");
@@ -1340,31 +1375,48 @@ public class ConsoleMainServer {
 		int second = Integer.parseInt(times[2]);
 		int minutes = minute % 10;
 		int count = hour * 6 + minute / 10;
-		int index = count / 8 - 1;
-		int inbyte = count % 8;
-		// System.out.println(hour+","+minute+","+count+","+index+","+inbyte);
-		// System.out.println(bitmap[index]);
-		// System.out.println(bitmap[index] >> inbyte);
-		if ((bitmap[index] >> inbyte) % 2 == 1) {
-			// System.out.println("true");
-			return true;
-		} else
-			return false;
+		int i = 1;
+		while (bit[count + i] != 1) {
+			i += 1;
+		}
+		if (active == 1) {
+			i = 1;
+			while (bit[count + i] != 1) {
+				i += 1;
+			}
+			difference = (600 - (minutes * 60 + second)) + (i - 1) * 600 + 330;
+		} else {
+			i = 1;
+			while (bit[count + i] != 0) {
+				i += 1;
+			}
+			difference = (600 - (minutes * 60 + second)) + (i - 1) * 600;
+		}
 		return difference;
 	}
 
 	// 缓存发送
 	public void cache_send(int cache, int has_return, String cacheCommand, byte[] com) throws IOException {
 		int count = 0;
+		int wait = 0;
+		byte[] bit = new byte[144];
 		String filename = null;
+		String currenttime = Util.getCurrentTime();
+		String[] times = currenttime.split(":");
+		int hour = Integer.parseInt(times[0]);
+		int minute = Integer.parseInt(times[1]);
+		int second = Integer.parseInt(times[2]);
+		int minutes = minute % 10;
+		int minute_count = hour * 6 + minute / 10;
 		if (has_return == 1) {
 			try {
 				count = SqlOperate.NetMonitor_count();
 				SqlOperate.commandCache_a(cacheCommand);
 				if (cache == 1) {
-					// 状态时间差计算！！！！
+					wait = time_diffence(0, getbit());
 				}
 				TunSendToRootMessage(com);
+				// 等待三十秒
 				filename = Util.getCurrentTime() + "-App-return";
 				SqlOperate.NetMonitor_count_out(count, filename);
 				WriteFTPFile write = new WriteFTPFile();
@@ -1374,17 +1426,16 @@ public class ConsoleMainServer {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
-			// 状态时间差计算！！！！
 		} else if (has_return == 2) {
 			try {
 				count = SqlOperate.ApplicationData_count();
 				SqlOperate.commandCache_a(cacheCommand);
 				filename = Util.getCurrentTime() + "Net-return";
 				if (cache == 1) {
-					// 状态时间差计算！！！！
+					wait = time_diffence(1, getbit());
 				}
 				TunSendToRootMessage(com);
+				// 等待三十秒
 				SqlOperate.ApplicationData_count_out(count, filename);
 				WriteFTPFile write = new WriteFTPFile();
 				write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(),
@@ -1399,10 +1450,11 @@ public class ConsoleMainServer {
 				count = SqlOperate.ApplicationData_count();
 				SqlOperate.commandCache_a(cacheCommand);
 				if (cache == 1) {
-					// 状态时间差计算！！！！
+					wait = time_diffence(1, getbit());
 				}
 				filename = "config.json";
 				TunSendToRootMessage(com);
+				// 等待三十秒
 				WriteFTPFile write = new WriteFTPFile();
 				write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(),
 						parameter.getftpPort(), filename);
@@ -1412,7 +1464,16 @@ public class ConsoleMainServer {
 			}
 		} else {
 			if (cache == 1) {
-				// 状态时间差计算！！！！
+				if (cacheCommand == "FFFFFFFF") {
+					bit = getbit();
+					if (getbit()[minute_count + 1] == 1) {
+						wait = (600 - (minutes * 60 + second)) + 330;
+					} else {
+						wait = (600 - (minutes * 60 + second));
+					}
+
+				} else
+					wait = time_diffence(1, getbit());
 			}
 			TunSendToRootMessage(com);
 		}
