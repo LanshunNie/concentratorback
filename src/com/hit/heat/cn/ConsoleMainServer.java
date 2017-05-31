@@ -562,10 +562,10 @@ public class ConsoleMainServer {
 		// parameter.getupperPort());// for
 		byte[] currenttime = Util.formatByteStrToByte(Util.getCurrentTime());
 		boolean flag = Util.Online_Judge(synParameter.getBitmap());
-		byte status = (byte)Util.StatusJuage(flag);
+		byte status = (byte) Util.StatusJuage(flag);
 		byte[] centor = Util.formatByteStrToByte(parameter.getId());
 		try {
-			int cache_number = (byte)SqlOperate.CommandCache_count();
+			int cache_number = (byte) SqlOperate.CommandCache_count();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -573,8 +573,8 @@ public class ConsoleMainServer {
 		byte[] mesge = new byte[14];
 		System.arraycopy(currenttime, 0, mesge, 0, currenttime.length);
 		System.arraycopy(flag, 0, mesge, currenttime.length, 1);
-		System.arraycopy(centor, 0, mesge, currenttime.length+1, centor.length);
-		System.arraycopy(status,0, mesge, currenttime.length+1+centor.length, 1);
+		System.arraycopy(centor, 0, mesge, currenttime.length + 1, centor.length);
+		System.arraycopy(status, 0, mesge, currenttime.length + 1 + centor.length, 1);
 		try {
 			SendToupperMessage(mesge);
 			System.out.println(Util.getCurrentTime() + " 发送心跳包以保持GPRS在线!");
@@ -1413,10 +1413,23 @@ public class ConsoleMainServer {
 				count = SqlOperate.NetMonitor_count();
 				SqlOperate.commandCache_a(cacheCommand);
 				if (cache == 1) {
+					Timer timer = new Timer();
 					wait = time_diffence(0, getbit());
+					timer.schedule(new TimerTask() {
+						public void run() {
+							System.out.println("等待配置");
+						}
+					}, wait * 1000);
+
 				}
 				TunSendToRootMessage(com);
 				// 等待三十秒
+				Timer timer = new Timer();
+				timer.schedule(new TimerTask() {
+					public void run() {
+						System.out.println("等待上报应用数据");
+					}
+				}, 30 * 1000);
 				filename = Util.getCurrentTime() + "-App-return";
 				SqlOperate.NetMonitor_count_out(count, filename);
 				WriteFTPFile write = new WriteFTPFile();
@@ -1433,8 +1446,20 @@ public class ConsoleMainServer {
 				filename = Util.getCurrentTime() + "Net-return";
 				if (cache == 1) {
 					wait = time_diffence(1, getbit());
+					Timer timer = new Timer();
+					timer.schedule(new TimerTask() {
+						public void run() {
+							System.out.println("等待配置");
+						}
+					}, wait * 1000);
 				}
 				TunSendToRootMessage(com);
+				Timer timer = new Timer();
+				timer.schedule(new TimerTask() {
+					public void run() {
+						System.out.println("等待上报网络检测数据");
+					}
+				}, 30 * 1000);
 				// 等待三十秒
 				SqlOperate.ApplicationData_count_out(count, filename);
 				WriteFTPFile write = new WriteFTPFile();
@@ -1451,10 +1476,16 @@ public class ConsoleMainServer {
 				SqlOperate.commandCache_a(cacheCommand);
 				if (cache == 1) {
 					wait = time_diffence(1, getbit());
+					Timer timer = new Timer();
+					timer.schedule(new TimerTask() {
+						public void run() {
+							System.out.println("等待配置");
+						}
+					}, wait * 1000);
 				}
 				filename = "config.json";
 				TunSendToRootMessage(com);
-				// 等待三十秒
+
 				WriteFTPFile write = new WriteFTPFile();
 				write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(),
 						parameter.getftpPort(), filename);
@@ -1472,9 +1503,17 @@ public class ConsoleMainServer {
 						wait = (600 - (minutes * 60 + second));
 					}
 
-				} else
+				} else {
 					wait = time_diffence(1, getbit());
+
+				}
 			}
+			Timer timer = new Timer();
+			timer.schedule(new TimerTask() {
+				public void run() {
+					System.out.println("等待配置");
+				}
+			}, wait * 1000);
 			TunSendToRootMessage(com);
 		}
 	}
