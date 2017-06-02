@@ -157,6 +157,7 @@ public class ConsoleMainServer {
 	boolean flag = false;
 	private int MaxCount = 10;
 	private int Count = 0;
+	private int Net_Status_flag = 0;
 	// private static Logger logger = Logger.getLogger(FTPMain.class);
 
 	public ConsoleMainServer() {
@@ -1395,8 +1396,131 @@ public class ConsoleMainServer {
 		return difference;
 	}
 
+	public void send_return(int has_return, String cacheCommand, byte[] com) throws IOException {
+		int count = 0;
+		int wait = 0;
+		byte[] bit = new byte[144];
+		String filename = null;
+		String currenttime = Util.getCurrentTime();
+		String[] times = currenttime.split(":");
+		int hour = Integer.parseInt(times[0]);
+		int minute = Integer.parseInt(times[1]);
+		int second = Integer.parseInt(times[2]);
+		int minutes = minute % 10;
+		int minute_count = hour * 6 + minute / 10;
+		if (has_return == 1) {
+			try {
+				count = SqlOperate.NetMonitor_count();
+				SqlOperate.commandCache_a(cacheCommand);
+				// if (cache == 1) {
+				// Timer timer = new Timer();
+				// wait = time_diffence(0, getbit());
+				// timer.schedule(new TimerTask() {
+				// public void run() {
+				// System.out.println("等待配置");
+				// }
+				// }, wait * 1000);
+				//
+				// }
+				TunSendToRootMessage(com);
+				Timer timer = new Timer();
+				timer.schedule(new TimerTask() {
+					public void run() {
+						System.out.println("等待上报应用数据");
+					}
+				}, 30 * 1000);
+				filename = Util.getCurrentTime() + "-App-return";
+				SqlOperate.NetMonitor_count_out(count, filename);
+				WriteFTPFile write = new WriteFTPFile();
+				write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(),
+						parameter.getftpPort(), filename);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else if (has_return == 2) {
+			try {
+				count = SqlOperate.ApplicationData_count();
+				SqlOperate.commandCache_a(cacheCommand);
+				filename = Util.getCurrentTime() + "Net-return";
+				// if (cache == 1) {
+				// wait = time_diffence(1, getbit());
+				// Timer timer = new Timer();
+				// timer.schedule(new TimerTask() {
+				// public void run() {
+				// System.out.println("等待配置");
+				// }
+				// }, wait * 1000);
+				// }
+				TunSendToRootMessage(com);
+				Timer timer = new Timer();
+				timer.schedule(new TimerTask() {
+					public void run() {
+						System.out.println("等待上报网络检测数据");
+					}
+				}, 30 * 1000);
+				// 等待三十秒
+				SqlOperate.ApplicationData_count_out(count, filename);
+				WriteFTPFile write = new WriteFTPFile();
+				write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(),
+						parameter.getftpPort(), filename);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		} else if (has_return == 3) {
+			try {
+				count = SqlOperate.ApplicationData_count();
+				SqlOperate.commandCache_a(cacheCommand);
+				// if (cache == 1) {
+				// wait = time_diffence(1, getbit());
+				// Timer timer = new Timer();
+				// timer.schedule(new TimerTask() {
+				// public void run() {
+				// System.out.println("等待配置");
+				// }
+				// }, wait * 1000);
+				// }
+				filename = "config.json";
+				TunSendToRootMessage(com);
+
+				WriteFTPFile write = new WriteFTPFile();
+				write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(),
+						parameter.getftpPort(), filename);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			// if (cache == 1) {
+			// if (cacheCommand == "FFFFFFFF") {
+			// bit = getbit();
+			// if (getbit()[minute_count + 1] == 1) {
+			// wait = (600 - (minutes * 60 + second)) + 330;
+			// } else {
+			// wait = (600 - (minutes * 60 + second));
+			// }
+			//
+			// } else {
+			// wait = time_diffence(1, getbit());
+			//
+			// }
+			// }
+			// Timer timer = new Timer();
+			// timer.schedule(new TimerTask() {
+			// public void run() {
+			// System.out.println("等待配置");
+			// }
+			// }, wait * 1000);
+			TunSendToRootMessage(com);
+		}
+	}
+
 	// 缓存发送
-	public void cache_send(int cache, int has_return, String cacheCommand, byte[] com) throws IOException {
+	// public void cache_send(int cache, int has_return, String cacheCommand,
+	// byte[] com) throws IOException {
+	public void cache_wait(int cache, int has_return, String cacheCommand, byte[] com) throws IOException {
 		int count = 0;
 		int wait = 0;
 		byte[] bit = new byte[144];
@@ -1422,19 +1546,20 @@ public class ConsoleMainServer {
 					}, wait * 1000);
 
 				}
-				TunSendToRootMessage(com);
-				// 等待三十秒
-				Timer timer = new Timer();
-				timer.schedule(new TimerTask() {
-					public void run() {
-						System.out.println("等待上报应用数据");
-					}
-				}, 30 * 1000);
-				filename = Util.getCurrentTime() + "-App-return";
-				SqlOperate.NetMonitor_count_out(count, filename);
-				WriteFTPFile write = new WriteFTPFile();
-				write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(),
-						parameter.getftpPort(), filename);
+				// TunSendToRootMessage(com);
+				// // 等待三十秒
+				// Timer timer = new Timer();
+				// timer.schedule(new TimerTask() {
+				// public void run() {
+				// System.out.println("等待上报应用数据");
+				// }
+				// }, 30 * 1000);
+				// filename = Util.getCurrentTime() + "-App-return";
+				// SqlOperate.NetMonitor_count_out(count, filename);
+				// WriteFTPFile write = new WriteFTPFile();
+				// write.upload(parameter.getftpuser(), parameter.getftpPwd(),
+				// parameter.getftphost(),
+				// parameter.getftpPort(), filename);
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -1453,18 +1578,19 @@ public class ConsoleMainServer {
 						}
 					}, wait * 1000);
 				}
-				TunSendToRootMessage(com);
-				Timer timer = new Timer();
-				timer.schedule(new TimerTask() {
-					public void run() {
-						System.out.println("等待上报网络检测数据");
-					}
-				}, 30 * 1000);
-				// 等待三十秒
-				SqlOperate.ApplicationData_count_out(count, filename);
-				WriteFTPFile write = new WriteFTPFile();
-				write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(),
-						parameter.getftpPort(), filename);
+				// TunSendToRootMessage(com);
+				// Timer timer = new Timer();
+				// timer.schedule(new TimerTask() {
+				// public void run() {
+				// System.out.println("等待上报网络检测数据");
+				// }
+				// }, 30 * 1000);
+				// // 等待三十秒
+				// SqlOperate.ApplicationData_count_out(count, filename);
+				// WriteFTPFile write = new WriteFTPFile();
+				// write.upload(parameter.getftpuser(), parameter.getftpPwd(),
+				// parameter.getftphost(),
+				// parameter.getftpPort(), filename);
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -1483,29 +1609,28 @@ public class ConsoleMainServer {
 						}
 					}, wait * 1000);
 				}
-				filename = "config.json";
-				TunSendToRootMessage(com);
-
-				WriteFTPFile write = new WriteFTPFile();
-				write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(),
-						parameter.getftpPort(), filename);
+				// filename = "config.json";
+				// TunSendToRootMessage(com);
+				//
+				// WriteFTPFile write = new WriteFTPFile();
+				// write.upload(parameter.getftpuser(), parameter.getftpPwd(),
+				// parameter.getftphost(),
+				// parameter.getftpPort(), filename);
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		} else {
 			if (cache == 1) {
-				if (cacheCommand == "FFFFFFFF") {
+				if (cacheCommand == "FFFFFFFF") {// 调试指令
 					bit = getbit();
 					if (getbit()[minute_count + 1] == 1) {
 						wait = (600 - (minutes * 60 + second)) + 330;
 					} else {
 						wait = (600 - (minutes * 60 + second));
 					}
-
 				} else {
 					wait = time_diffence(1, getbit());
-
 				}
 			}
 			Timer timer = new Timer();
@@ -1514,7 +1639,8 @@ public class ConsoleMainServer {
 					System.out.println("等待配置");
 				}
 			}, wait * 1000);
-			TunSendToRootMessage(com);
+			
+			// TunSendToRootMessage(com);
 		}
 	}
 
@@ -1534,54 +1660,134 @@ public class ConsoleMainServer {
 		// System.out.println(command[0]+" "+command[1]+" "+command[2]);// for
 		// log
 		if (send_to_net == 1) {
-			boolean flag = Util.Online_Judge(synParameter.getBitmap());
-			if (Util.StatusJuage(flag) == 1) {
-				if (commands == "FFFFFFFF") {
+			if (Net_Status_flag != 6) {
+
+				boolean flag = Util.Online_Judge(synParameter.getBitmap());
+				Net_Status_flag = Util.StatusJuage(flag);
+				if (Net_Status_flag == 1) {
+					if (commands == "FFFFFFFF") {
+						try {
+							send_return(has_return, cacheCommand, com);
+							//TunSendToRootMessage(com);
+							Timer timer = new Timer();
+							timer.schedule(new TimerTask() {
+								public void run() {
+									System.out.println("wait for going into debugging");
+								}
+							}, 30 * 1000);
+							String message = "The net start debugging";
+							try {
+								SendToupperMessage(message.getBytes());
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							Net_Status_flag = 6;
+							CommandHandler(command);
+							// 状态转移到调试状态，
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					} else {
+						// 状态时间差计算！！！！
+						try {
+							cache_wait(1, has_return, cacheCommand, com);
+							CommandHandler(command);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				} else if (Net_Status_flag == 2) {
 					try {
-						TunSendToRootMessage(com);
+						cache_wait(1, has_return, cacheCommand, com);
+						CommandHandler(command);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				} else if (Net_Status_flag == 3) {
+					try {
+						cache_wait(1, has_return, cacheCommand, com);
+						CommandHandler(command);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				} else if (Net_Status_flag == 4) {
+					try {
+						// cache_send(0, has_return, cacheCommand, com);
+						send_return(has_return, cacheCommand, com);
+						if (commands == "FFFFFFFF") {
+							Timer timer = new Timer();
+							timer.schedule(new TimerTask() {
+								public void run() {
+									System.out.println("wait for going into debugging");
+								}
+							}, 30 * 1000);
+							String message = "The net start debugging";
+							try {
+								SendToupperMessage(message.getBytes());
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							Net_Status_flag = 6;
+							CommandHandler(command);
+						}
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				} else if (Net_Status_flag == 5) {
+					try {
+						cache_wait(1, has_return, cacheCommand, com);
+						CommandHandler(command);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				} else {
-					// 状态时间差计算！！！！
-					try {
-						cache_send(1, has_return, cacheCommand, com);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+					if(cacheCommand == "debug end"){
+						//"xiafa diaodu";
+						
+						String message = "The net has been close";
+						try {
+							send_return(has_return, cacheCommand, com);
+							Timer timer = new Timer();
+							timer.schedule(new TimerTask() {
+								public void run() {
+									System.out.println("wait for ending debug");
+								}
+							}, 30 * 1000);
+							SendToupperMessage(message.getBytes());
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						Net_Status_flag = 0;
+					}else if(cacheCommand == "FFFFFFFF"){
+						//"返回告警消息";
+						String message = "The net has already in debugging status";
+						try {
+							SendToupperMessage(message.getBytes());
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						
+					}else{
+						try {
+							send_return(has_return, cacheCommand, com);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					}
-				}
-			} else if (Util.StatusJuage(flag) == 2) {
-				try {
-					cache_send(1, has_return, cacheCommand, com);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			} else if (Util.StatusJuage(flag) == 3) {
-				try {
-					cache_send(1, has_return, cacheCommand, com);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			} else if (Util.StatusJuage(flag) == 4) {
-				try {
-					cache_send(0, has_return, cacheCommand, com);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			} else if (Util.StatusJuage(flag) == 5) {
-				try {
-					cache_send(1, has_return, cacheCommand, com);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					
 				}
 			}
-
 		} else {
 			if (commands == "16") {// 测试通过
 				getConcentratorID();
