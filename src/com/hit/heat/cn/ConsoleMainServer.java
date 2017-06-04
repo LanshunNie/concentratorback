@@ -1367,7 +1367,7 @@ public class ConsoleMainServer {
 		return bit;
 	}
 
-	public int time_diffence(int active, byte[] bit) {
+public int time_diffence(int active, byte[] bit) {
 		int difference = 0;
 		String currenttime = Util.getCurrentTime();
 		String[] times = currenttime.split(":");
@@ -1386,12 +1386,14 @@ public class ConsoleMainServer {
 				i += 1;
 			}
 			difference = (600 - (minutes * 60 + second)) + (i - 1) * 600 + 330;
+			System.out.println("active difference :"+difference);
 		} else {
 			i = 1;
 			while (bit[count + i] != 0) {
 				i += 1;
 			}
 			difference = (600 - (minutes * 60 + second)) + (i - 1) * 600;
+			System.out.println("inactive difference:"+difference);
 		}
 		return difference;
 	}
@@ -1412,16 +1414,7 @@ public class ConsoleMainServer {
 			try {
 				count = SqlOperate.NetMonitor_count();
 				SqlOperate.commandCache_a(cacheCommand);
-				// if (cache == 1) {
-				// Timer timer = new Timer();
-				// wait = time_diffence(0, getbit());
-				// timer.schedule(new TimerTask() {
-				// public void run() {
-				// System.out.println("等待配置");
-				// }
-				// }, wait * 1000);
-				//
-				// }
+				
 				TunSendToRootMessage(com);
 				Timer timer = new Timer();
 				timer.schedule(new TimerTask() {
@@ -1443,15 +1436,6 @@ public class ConsoleMainServer {
 				count = SqlOperate.ApplicationData_count();
 				SqlOperate.commandCache_a(cacheCommand);
 				filename = Util.getCurrentTime() + "Net-return";
-				// if (cache == 1) {
-				// wait = time_diffence(1, getbit());
-				// Timer timer = new Timer();
-				// timer.schedule(new TimerTask() {
-				// public void run() {
-				// System.out.println("等待配置");
-				// }
-				// }, wait * 1000);
-				// }
 				TunSendToRootMessage(com);
 				Timer timer = new Timer();
 				timer.schedule(new TimerTask() {
@@ -1473,15 +1457,7 @@ public class ConsoleMainServer {
 			try {
 				count = SqlOperate.ApplicationData_count();
 				SqlOperate.commandCache_a(cacheCommand);
-				// if (cache == 1) {
-				// wait = time_diffence(1, getbit());
-				// Timer timer = new Timer();
-				// timer.schedule(new TimerTask() {
-				// public void run() {
-				// System.out.println("等待配置");
-				// }
-				// }, wait * 1000);
-				// }
+				
 				filename = "config.json";
 				TunSendToRootMessage(com);
 
@@ -1493,33 +1469,10 @@ public class ConsoleMainServer {
 				e.printStackTrace();
 			}
 		} else {
-			// if (cache == 1) {
-			// if (cacheCommand == "FFFFFFFF") {
-			// bit = getbit();
-			// if (getbit()[minute_count + 1] == 1) {
-			// wait = (600 - (minutes * 60 + second)) + 330;
-			// } else {
-			// wait = (600 - (minutes * 60 + second));
-			// }
-			//
-			// } else {
-			// wait = time_diffence(1, getbit());
-			//
-			// }
-			// }
-			// Timer timer = new Timer();
-			// timer.schedule(new TimerTask() {
-			// public void run() {
-			// System.out.println("等待配置");
-			// }
-			// }, wait * 1000);
 			TunSendToRootMessage(com);
 		}
 	}
 
-	// 缓存发送
-	// public void cache_send(int cache, int has_return, String cacheCommand,
-	// byte[] com) throws IOException {
 	public void cache_wait(int cache, int has_return, String cacheCommand, byte[] com) throws IOException {
 		int count = 0;
 		int wait = 0;
@@ -1538,7 +1491,8 @@ public class ConsoleMainServer {
 				SqlOperate.commandCache_a(cacheCommand);
 				if (cache == 1) {
 					Timer timer = new Timer();
-					wait = time_diffence(0, getbit());
+					wait = time_diffence(1, getbit());
+					System.out.println("wait:");
 					timer.schedule(new TimerTask() {
 						public void run() {
 							System.out.println("等待配置");
@@ -1546,20 +1500,7 @@ public class ConsoleMainServer {
 					}, wait * 1000);
 
 				}
-				// TunSendToRootMessage(com);
-				// // 等待三十秒
-				// Timer timer = new Timer();
-				// timer.schedule(new TimerTask() {
-				// public void run() {
-				// System.out.println("等待上报应用数据");
-				// }
-				// }, 30 * 1000);
-				// filename = Util.getCurrentTime() + "-App-return";
-				// SqlOperate.NetMonitor_count_out(count, filename);
-				// WriteFTPFile write = new WriteFTPFile();
-				// write.upload(parameter.getftpuser(), parameter.getftpPwd(),
-				// parameter.getftphost(),
-				// parameter.getftpPort(), filename);
+				
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -1578,19 +1519,7 @@ public class ConsoleMainServer {
 						}
 					}, wait * 1000);
 				}
-				// TunSendToRootMessage(com);
-				// Timer timer = new Timer();
-				// timer.schedule(new TimerTask() {
-				// public void run() {
-				// System.out.println("等待上报网络检测数据");
-				// }
-				// }, 30 * 1000);
-				// // 等待三十秒
-				// SqlOperate.ApplicationData_count_out(count, filename);
-				// WriteFTPFile write = new WriteFTPFile();
-				// write.upload(parameter.getftpuser(), parameter.getftpPwd(),
-				// parameter.getftphost(),
-				// parameter.getftpPort(), filename);
+				
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -1609,13 +1538,7 @@ public class ConsoleMainServer {
 						}
 					}, wait * 1000);
 				}
-				// filename = "config.json";
-				// TunSendToRootMessage(com);
-				//
-				// WriteFTPFile write = new WriteFTPFile();
-				// write.upload(parameter.getftpuser(), parameter.getftpPwd(),
-				// parameter.getftphost(),
-				// parameter.getftpPort(), filename);
+				
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -1639,8 +1562,6 @@ public class ConsoleMainServer {
 					System.out.println("等待配置");
 				}
 			}, wait * 1000);
-			
-			// TunSendToRootMessage(com);
 		}
 	}
 
