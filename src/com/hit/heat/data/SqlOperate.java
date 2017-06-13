@@ -99,6 +99,7 @@ public class SqlOperate {
 
 	// 网络检测表统计
 	public static int NetMonitor_count() throws SQLException {
+		connect("jdbc:sqlite:topo3.db");
 		ResultSet rset = stat.executeQuery("select * from NetMonitor");
 		// rset.last();
 		int count = 0;
@@ -107,6 +108,7 @@ public class SqlOperate {
 			com = rset.getString("ID");
 			count += 1;
 		}
+		close();
 		return count;
 	}
 
@@ -297,14 +299,17 @@ public class SqlOperate {
 	}
 
 	public static int ApplicationData_count() throws SQLException {
-		ResultSet rset = stat.executeQuery("select * from ApplicationData");
+		connect("jdbc:sqlite:topo3.db");
+		ResultSet rs = stat.executeQuery("select * from ApplicationData");
 		// rset.last();
 		int count = 0;
 		String com = null;
-		while (rset.next()) {
-			com = rset.getString("ID");
+		while (rs.next()) {
+			com = rs.getString("ID");
 			count += 1;
 		}
+		rs.close();
+		close();
 		return count;
 	}
 
@@ -520,6 +525,7 @@ public class SqlOperate {
 
 	// 缓存数据表计算条数 //测试通过
 	public static int CommandCache_count() throws SQLException {
+		connect("jdbc:sqlite:topo3.db");
 		ResultSet rset = stat.executeQuery("select * from CommandCache");
 		// rset.last();
 		int count = 0;
@@ -528,6 +534,7 @@ public class SqlOperate {
 			com = rset.getString("Command");
 			count += 1;
 		}
+		close();
 		return count;
 	}
 

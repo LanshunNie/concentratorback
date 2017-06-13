@@ -1,0 +1,34 @@
+{
+	"id":"00000001",集中器ID
+	"HeartIntSec":30,
+	"AckHeartInt":3,
+	"MaxAckFail":30,
+	"tcpAddr":"0.0.0.0",TCP地址
+	"tcpPort":12300,TCP端口号
+	"tcpByWebPort":12301,
+	"tcpRemoteConfigPort":12306,
+	"udpAddr":"0.0.0.0",UDP地址
+	"udpPort":8765,UDP端口号
+	"rootAddr":"aaaa:0:0:0:12:7400:1:23",根节点地址
+	"rootPort":5678,根节点端口号
+	"rootRoomId":"512",
+	"rootX":12,
+	"rootY":20,
+	"dbIpAddr":"127.0.0.1",
+	"dbUser":"root",
+	"dbPassword":"123456",
+	"dbSchema":"sensor_db",
+	"tcpWebServerAddr":"192.168.1.140",tcpWeb服务器地址
+	"tcpWebServerPort":12303,tcpWeb服务器端口号
+	"remoteAddr":"127.0.0.1",
+	"remotePort":"12304",
+	"netPort":12307,
+	"dayLength":2,上报周期
+	"appSendLength":3,上报数据天数（比如3表示上报从当前时间之前三天的数据）
+	"upperAddr":"123.207.91.238",上位机地址
+	"upperPort":12400,上位机端口号
+	"ftpuser":"xiaoming", FTP用户名
+    "ftphost":"123.207.91.238",   FTP地址
+	"ftpPwd":"xiaoming",FTP密码
+	"ftpPort":21FTP端口号
+	}
