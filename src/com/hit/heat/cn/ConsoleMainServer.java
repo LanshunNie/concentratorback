@@ -1954,7 +1954,7 @@ public class ConsoleMainServer {
 					try {
 						cache_wait(1, has_return, commands, com);
 						SqlOperate.CommandCache_get();
-						Net_Status_flag = 4;
+						//Net_Status_flag = 4;
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
