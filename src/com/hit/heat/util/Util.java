@@ -1108,14 +1108,14 @@ public class Util {
 		int count = hour * 6 + minute / 10;
 		int index = count / 8;
 		int inbyte = count % 8;
-		System.out.println(hour+","+minute+","+count+","+index+","+inbyte);
-		System.out.println("bitmap[index]:"+bitmap[index]);
-		System.out.println("bitmap[index] >> inbyte:"+(bitmap[index] >> inbyte));
-		if ((bitmap[index] >> inbyte) % 2 == 1) {
-			System.out.println("true");
+		//System.out.println(hour+","+minute+","+count+","+index+","+inbyte);
+		//System.out.println("bitmap[index]:"+bitmap[index]);
+		//System.out.println("bitmap[index] >> inbyte:"+(bitmap[index] >> inbyte));
+		if ((bitmap[index] >> inbyte) % 2 == 1 || (bitmap[index] >> inbyte) % 2 == -1) {
+			//System.out.println("true");
 			return true;
 		} else{
-			System.out.println("false");
+			//System.out.println("false");
 			return false;
 		}
 	}
@@ -1127,13 +1127,13 @@ public class Util {
 		// int hour = Integer.parseInt(times[0]);
 		int minute = Integer.parseInt(times[1]);
 		int second = Integer.parseInt(times[2]);;
-		int time = second + (minute%10) * 60;
-		System.out.println("time:"+time);
+		int time = second + (minute % 10) * 60;
+		//System.out.println("time:"+time);
 		int flag = 0;
 		if (!online) {
 			if (time < 20)
 				flag = 1;
-			else if (time > 20 && time < 300)
+			else if (time > 20 && time < 600)
 				flag = 2;
 		} else {
 			if (time < 330)

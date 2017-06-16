@@ -166,7 +166,9 @@ public class ConsoleMainServer {
 	// private static Logger logger = Logger.getLogger(FTPMain.class);
 
 	public ConsoleMainServer() {
-
+		SqlOperate.connect("jdbc:sqlite:topo3.db");
+		SqlOperate.close();
+		SqlOperate.CommandCache_get();
 		try {
 			/***********************************************************/
 			int drop_length = 1;
@@ -553,13 +555,13 @@ public class ConsoleMainServer {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println(centor);
+		//System.out.println(centor);
 		
 		int mesge_length = currenttime.length + flag_b.getBytes().length + centor.length + status.getBytes().length;
-		System.out.println("current-l:"+currenttime.length + " centor-l:" + centor.length);
-		System.out.println("mesge_l:"+mesge_length);
+		//System.out.println("current-l:"+currenttime.length + " centor-l:" + centor.length);
+		//System.out.println("mesge_l:"+mesge_length);
 		byte[] mesge = new byte[mesge_length];
-		System.out.println(currenttime);
+		//System.out.println(currenttime);
 		System.arraycopy(currenttime, 0, mesge, 0, currenttime.length);
 		
 		//mesge[currenttime.length] = flag_b.getBytes();
@@ -594,7 +596,7 @@ public class ConsoleMainServer {
 			// }
 			nioUpperServer.registerHandler(new UpperUdpMessageHandler());
 			nioUpperServer.start();
-			System.out.println("upper server start");// for log //115200
+			System.out.println(Util.getCurrentTime()+" upper server start");// for log //115200
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
@@ -1524,14 +1526,13 @@ public class ConsoleMainServer {
 				//System.out.println(" com:" + i + ":" + com3[i]);
 			}
 			command = com3;
-			System.out.println("command[0] = " + command[0]); // log
+			//System.out.println("command[0] = " + command[0]); // log
 			// byte[] command = Util.formatByteStrToByte(s);
 			// System.out.println("Start command handler");// for log
 			CommandHandler(command);
 			System.out.println(Util.getCurrentTime() + " command handle over");// for
 																				// log
 			// System.out.println(s);
-			System.out.println();
 			return null;
 		}
 	}
@@ -1593,7 +1594,7 @@ public class ConsoleMainServer {
 		int hour = Integer.parseInt(times[0]);
 		int minute = Integer.parseInt(times[1]);
 		int second = Integer.parseInt(times[2]);
-		System.out.println("hour:" + hour + " minute:" + minute + " second:" + second);
+		//System.out.println("hour:" + hour + " minute:" + minute + " second:" + second);
 		int minutes = minute % 10;
 		int count = hour * 6 + minute / 10;
 		int i = 1;
@@ -1616,7 +1617,7 @@ public class ConsoleMainServer {
 			while (bit[count + i] != 1) {
 				i += 1;
 			}
-			System.out.println("active difference :" + difference + " i:" + i);
+			//System.out.println("active difference :" + difference + " i:" + i);
 
 		} else {
 			i = 1;
@@ -1624,9 +1625,9 @@ public class ConsoleMainServer {
 				i += 1;
 			}
 			difference = (600 - (minutes * 60 + second)) + (i - 1) * 600;
-			System.out.println("inactive difference:" + difference + " i:" + i);
+			//System.out.println("inactive difference:" + difference + " i:" + i);
 		}
-		System.out.println("count + i:" + count + i + " /6:" + (count + i) / 6 + " %6:" + (count + i) % 6);
+		//System.out.println("count + i:" + count + i + " /6:" + (count + i) / 6 + " %6:" + (count + i) % 6);
 		difference = (600 - (minutes * 60 + second)) + (i - 1) * 600 + 330;
 
 		return difference;
@@ -1653,14 +1654,16 @@ public class ConsoleMainServer {
 			}
 			// SqlOperate.commandCache_a(cacheCommand);
 			//System.out.println("TunSendToRootMessage(com);");
-			Upper_messageHandler(cacheCommand);
+			System.out.println("上位机指令下发给跟节点");
+			//Upper_messageHandler(cacheCommand);
 			//TunSendToRootMessage(com);
 			Timer timer = new Timer();
 			timer.schedule(new TimerTask() {
 				public void run() {
-					System.out.println("等待上报应用数据1");
+					System.out.println("上位机等待上报应用数据");
 				}
 			}, 5 * 1000);
+			//}，30 * 1000);
 			filename = Util.getCurrentTime() + "-App-return";
 			SqlOperate.NetMonitor_count_out(count, filename);
 			 WriteFTPFile write = new WriteFTPFile();
@@ -1677,12 +1680,12 @@ public class ConsoleMainServer {
 			// SqlOperate.commandCache_a(cacheCommand);
 			filename = Util.getCurrentTime() + "Net-return";
 			//System.out.println("TunSendToRootMessage(com);");
-			Upper_messageHandler(cacheCommand);
-			//TunSendToRootMessage(com);
+			System.out.println("上位机指令下发给跟节点");
+			//Upper_messageHandler(cacheCommand);
 			Timer timer = new Timer();
 			timer.schedule(new TimerTask() {
 				public void run() {
-					System.out.println("等待上报网络检测数据2");
+					System.out.println("上位机等待上报网络检测数据");
 				}
 			}, 5 * 1000);
 			//wait 30s
@@ -1694,23 +1697,23 @@ public class ConsoleMainServer {
 
 		} else if (has_return == 3) {
 			filename = "config.json";
-			System.out.println("TunSendToRootMessage(com);");
+			System.out.println("上位机指令下发给跟节点");
 			// Upper_messageHandler(cacheCommand);
 			// TunSendToRootMessage(com);
-			System.out.println("等待上报配置3");
+			System.out.println("上位机等待上报配置");
 			 WriteFTPFile write = new WriteFTPFile();
 			 write.upload(parameter.getftpuser(), parameter.getftpPwd(),
 			 parameter.getftphost(),
 			 parameter.getftpPort(), filename);
 		} else {
-			System.out.println("TunSendToRootMessage(com);");
-			Upper_messageHandler(cacheCommand);
+			System.out.println("上位机指令下发给跟节点");
+			//Upper_messageHandler(cacheCommand);
 		}
 	}
 
 	public void cache_wait(int cache, int has_return, String cacheCommand, byte[] com) throws IOException {
-		System.out.println("cache:" + cache + " has return:" + has_return + " cacheCommand:" + cacheCommand);
-		System.out.println(" cacheCommand:" + cacheCommand);
+		//System.out.println("cache:" + cache + " has return:" + has_return + " cacheCommand:" + cacheCommand);
+		//System.out.println(" cacheCommand:" + cacheCommand);
 		int count = 0;
 		int wait = 0;
 		byte[] bit = new byte[144];
@@ -1736,10 +1739,11 @@ public class ConsoleMainServer {
 			if (cache == 1) {
 				Timer timer = new Timer();
 				wait = time_diffence(1, getbit());
-				System.out.println("wait:" + wait);
+				System.out.println("wait for :" + wait+"s");
 				timer.schedule(new TimerTask() {
 					public void run() {
-						System.out.println("等待配置1");
+						//System.out.println("wait for:" + wait);
+						//System.out.println("等待配置1");
 						try {
 							send_return(return1, cache1, com1);
 						} catch (IOException e) {
@@ -1748,8 +1752,8 @@ public class ConsoleMainServer {
 						}
 						Net_Status_flag = 4;
 					}
-				//}, 1 * 1000);
-				}, wait * 1000);
+				}, 1 * 1000);
+				//}, wait * 1000);
 			}
 		} else if (has_return == 2) {
 			try {
@@ -1759,13 +1763,14 @@ public class ConsoleMainServer {
 				e1.printStackTrace();
 			}
 			//SqlOperate.commandCache_a(cacheCommand);
-			System.out.println("等待配置s");
+			//System.out.println("等待配置s");
 			if (cache == 1) {
 				wait = time_diffence(1, getbit());
+				System.out.println("wait for :" + wait+"s");
 				Timer timer = new Timer();
 				timer.schedule(new TimerTask() {
 					public void run() {
-						System.out.println("等待配置2");
+						//System.out.println("等待配置2");
 						try {
 							send_return(return1, cache1, com1);
 						} catch (IOException e) {
@@ -1774,8 +1779,8 @@ public class ConsoleMainServer {
 						}
 						Net_Status_flag = 4;
 					}
-				//}, 2 * 1000);
-				}, wait * 1000);
+				}, 2 * 1000);
+				//}, wait * 1000);
 			}
 
 		} else if (has_return == 3) {
@@ -1788,10 +1793,11 @@ public class ConsoleMainServer {
 			//SqlOperate.commandCache_a(cacheCommand);
 			if (cache == 1) {
 				wait = time_diffence(1, getbit());
+				System.out.println("wait for :" + wait+"s");
 				Timer timer = new Timer();
 				timer.schedule(new TimerTask() {
 					public void run() {
-						System.out.println("等待配置3");
+						//System.out.println("等待配置3");
 						try {
 							send_return(return1, cache1, com1);
 						} catch (IOException e) {
@@ -1813,9 +1819,10 @@ public class ConsoleMainServer {
 						wait = (600 - (minutes * 60 + second));
 					}
 					Timer timer = new Timer();
+					System.out.println("wait for :" + wait+"s");
 					timer.schedule(new TimerTask() {
 						public void run() {
-							System.out.println("等待配置4");
+							//System.out.println("等待配置4");
 							try {
 								send_return(return1, cache1, com1);
 							} catch (IOException e) {
@@ -1825,7 +1832,7 @@ public class ConsoleMainServer {
 							Timer timer = new Timer();
 							timer.schedule(new TimerTask() {
 								public void run() {
-									System.out.println("wait for going into debugging");
+									//System.out.println("wait for going into debugging");
 									String message = "The net start debugging";
 									// System.out.println("SendToupperMessage(message.getBytes())");
 									try {
@@ -1836,17 +1843,18 @@ public class ConsoleMainServer {
 									}
 									Net_Status_flag = 6;
 								}
-							//}, 3 * 1000);
-							}, 30 * 1000);
+							}, 3 * 1000);
+							//}, 30 * 1000);
 						}
-					//}, 4 * 1000);
-					}, wait * 1000);
+					}, 4 * 1000);
+					//}, wait * 1000);
 				} else {
 					wait = time_diffence(1, getbit());
+					System.out.println("wait for :" + wait+"s");
 					Timer timer = new Timer();
 					timer.schedule(new TimerTask() {
 						public void run() {
-							System.out.println("等待配置3");
+							//System.out.println("等待配置3");
 							try {
 								send_return(return1, cache1, com1);
 							} catch (IOException e) {
@@ -1855,8 +1863,8 @@ public class ConsoleMainServer {
 							}
 							Net_Status_flag = 4;
 						}
-					//}, 3 * 1000);
-					}, wait * 1000);
+					}, 3 * 1000);
+					//}, wait * 1000);
 				}
 			}
 			
@@ -1880,16 +1888,9 @@ public class ConsoleMainServer {
 		for (int i = 0; i < command_length; i++) {
 			commands += Integer.toHexString(com[i]);
 		}
-		 try {
-			 if (SqlOperate.CommandCache_empty())
-				 SqlOperate.commandCache_a(commands);
-				 else return command;
-			 } catch (SQLException e1) {
-				 // TODO Auto-generated catch block
-				 e1.printStackTrace();
-		 }
+		 SqlOperate.commandCache_a(commands);
 		//String cacheCommand = Util.formatByteToByteStr(command);
-		System.out.println("Command Handler:" + commands);// for log
+		//System.out.println("Command Handler:" + commands);// for log
 		System.out.println("Net_Status_flag now:"+Net_Status_flag);
 		// command = cacheCommand.;
 		// System.out.println(command[0]+" "+command[1]+" "+command[2]);// for
@@ -1910,7 +1911,7 @@ public class ConsoleMainServer {
 							Timer timer = new Timer();
 							timer.schedule(new TimerTask() {
 								public void run() {
-									System.out.println("wait for going into debugging");
+									//System.out.println("wait for going into debugging");
 									String message = "The net start debugging";
 									try {
 										SendToupperMessage(message.getBytes());
@@ -1973,11 +1974,12 @@ public class ConsoleMainServer {
 						timer.schedule(new TimerTask() {
 							public void run() {
 								String message = "The net start debugging";
-								Upper_messageHandler(commandss);
+								System.out.println("上位机指令发送给网络");
+								//Upper_messageHandler(commandss);
 								SqlOperate.CommandCache_get();
 							}
-						//}, 3 * 1000);
-						}, 30 * 1000);
+						}, 3 * 1000);
+						//}, 30 * 1000);
 
 						// System.out.println("SendToupperMessage(message.getBytes());");
 						// SendToupperMessage(message.getBytes());
@@ -2061,8 +2063,8 @@ public class ConsoleMainServer {
 								}
 								SqlOperate.CommandCache_get();
 							}
-						}, 30 * 1000);
-
+						//}, 30 * 1000);
+						}, 3 * 1000);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
