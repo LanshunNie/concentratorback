@@ -1509,7 +1509,7 @@ public class ConsoleMainServer {
 		@Override
 		public byte[] messageHandler(String addr, byte[] message) {
 			String s = new String(message);
-			// System.out.println("Upper Udp Message Handler message:" + s);//
+			System.out.println("Upper Udp Message Handler message:" + s);//
 			// for
 			// System.out.println(addr+" "+ " "+ message.length + " "
 			// +message[0]);
@@ -1520,7 +1520,7 @@ public class ConsoleMainServer {
 			String c4 = "";
 			byte[] com3 = new byte[c3.length()];
 			for (int i = 0; i < 11; i++) {
-				com3[i] = (byte) Integer.parseInt(c3.substring(i, i + 1), 16);
+				com3[i] = (byte) Integer.parseInt(s.substring(i, i + 1), 16);
 			}
 			for (int i = 0; i < 11; i++) {
 				//System.out.println(" com:" + i + ":" + com3[i]);
@@ -1594,31 +1594,40 @@ public class ConsoleMainServer {
 		int hour = Integer.parseInt(times[0]);
 		int minute = Integer.parseInt(times[1]);
 		int second = Integer.parseInt(times[2]);
-		//System.out.println("hour:" + hour + " minute:" + minute + " second:" + second);
+		
 		int minutes = minute % 10;
 		int count = hour * 6 + minute / 10;
 		int i = 1;
-		// System.out.print(" ");
-		// for(i = 0;i<6;i++){
-		// System.out.print(" "+i);
-		// }
-		// for(i = 0;i<24;i++){
-		// //System.out.print(i);
-		// for (int j = 0;j<6;j++){
-		// System.out.print(" "+bit[6*i+j]);
-		// }
-		// System.out.println("");
-		// }
+		System.out.println("hour:" + hour + " minute:" + minute + " second:" + second+" minutes:"+minutes);
+		 System.out.print(" ");
+		 for(i = 0;i<6;i++){
+		 System.out.print(" "+i);
+		 }
+		 for(i = 0;i<24;i++){
+		 System.out.print(i);
+		 for (int j = 0;j<6;j++){
+		 System.out.print(" "+bit[6*i+j]);
+		 }
+		 System.out.println("");
+		 }
+		 System.out.println("|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
 		// while (bit[count + i] != 1) {
 		// i += 1;
 		// }
 		if (active == 1) {
 			i = 1;
-			while (bit[count + i] != 1) {
-				i += 1;
+			if (bit[count] == 1) {
+				if ((minutes * 60 + second) < 330){
+					difference = 330-(minutes * 60 + second);
+				}
 			}
-			//System.out.println("active difference :" + difference + " i:" + i);
-
+			else {
+				while (bit[count + i] != 1) {
+					i += 1;
+				}
+				System.out.println("active difference :" + difference + " i:" + i);
+				difference = (600 - (minutes * 60 + second)) + (i - 1) * 600 + 330;
+			}
 		} else {
 			i = 1;
 			while (bit[count + i] != 0) {
@@ -1628,7 +1637,7 @@ public class ConsoleMainServer {
 			//System.out.println("inactive difference:" + difference + " i:" + i);
 		}
 		//System.out.println("count + i:" + count + i + " /6:" + (count + i) / 6 + " %6:" + (count + i) % 6);
-		difference = (600 - (minutes * 60 + second)) + (i - 1) * 600 + 330;
+		
 
 		return difference;
 	}
@@ -1750,7 +1759,9 @@ public class ConsoleMainServer {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
+						
 						Net_Status_flag = 4;
+						System.out.println("Net_Status_flag change:"+Net_Status_flag);
 					}
 				}, 1 * 1000);
 				//}, wait * 1000);
@@ -1777,7 +1788,9 @@ public class ConsoleMainServer {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
+						
 						Net_Status_flag = 4;
+						System.out.println("Net_Status_flag change:"+Net_Status_flag);
 					}
 				}, 2 * 1000);
 				//}, wait * 1000);
@@ -1805,6 +1818,7 @@ public class ConsoleMainServer {
 							e.printStackTrace();
 						}
 						Net_Status_flag = 4;
+						System.out.println("Net_Status_flag change:"+Net_Status_flag);
 					}
 				//}, 3 * 1000);
 				}, wait * 1000);
@@ -1842,6 +1856,7 @@ public class ConsoleMainServer {
 										e.printStackTrace();
 									}
 									Net_Status_flag = 6;
+									System.out.println("Net_Status_flag change:"+Net_Status_flag);
 								}
 							}, 3 * 1000);
 							//}, 30 * 1000);
@@ -1862,6 +1877,7 @@ public class ConsoleMainServer {
 								e.printStackTrace();
 							}
 							Net_Status_flag = 4;
+							System.out.println("Net_Status_flag change:"+Net_Status_flag);
 						}
 					}, 3 * 1000);
 					//}, wait * 1000);
@@ -1894,9 +1910,11 @@ public class ConsoleMainServer {
 		System.out.println("Net_Status_flag now:"+Net_Status_flag);
 		// command = cacheCommand.;
 		// System.out.println(command[0]+" "+command[1]+" "+command[2]);// for
+		//Net_Status_flag = 6;
 		if (send_to_net == 1) {
 			if (Net_Status_flag != 6) {
-				byte[] bitmap = new byte[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+				byte[] bitmap = new byte[]{-1,-128,35,84,72,-128,61,-2,16,2,4,68,90,48,0,0,8,10};
+				//byte[] bitmap = new byte[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 				// byte[] bitmap = new byte[] { -1, -128, 35, 84, 72, -128, 61,
 				// -2, 16, 2, 4, 68, 90, 48, 0, -1, -1, -1 };
 				boolean flag = Util.Online_Judge(bitmap);
@@ -2044,7 +2062,7 @@ public class ConsoleMainServer {
 //					}
 				}
 			}else{
-				if ("debug end".equals(commands)) {
+				if ("ffffffee".equals(commands)) {
 					// "xiafa diaodu";
 					final String commandss = commands;
 					final String message = "The net has been close";
