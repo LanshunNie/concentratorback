@@ -59,11 +59,11 @@ public class WriteFTPFile {
 				InputStream in = new FileInputStream(f);
 				ftpClient.storeFile(remoteFileName, in);
 				in.close();
-				System.out.println(Util.getCurrentTime()+" 上传文件 " + uploadFile + " 到FTP成功!");
+				System.out.println(Util.getCurrentTime()+" send file " + uploadFile + " to FTP success!");
 				//f.delete(); // 删除本地文件
 				return 1;
 			} else {
-				System.err.println(Util.getCurrentTime()+" 上传文件失败!");
+				System.err.println(Util.getCurrentTime()+" send file fail!");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -96,7 +96,7 @@ public class WriteFTPFile {
 			
 			if(!f.exists()){
 				if(!f.createNewFile()){
-					System.err.println(Util.getCurrentTime()+" 文件不存在，创建失败!");
+					System.err.println(Util.getCurrentTime()+" file does not exist，creat fail!");
 				}
 			}
 			BufferedWriter bw = new BufferedWriter(new FileWriter(f, true));
@@ -105,7 +105,7 @@ public class WriteFTPFile {
 			bw.close();
 			return true;
 		} catch (Exception e) {
-			System.err.println(Util.getCurrentTime()+" 写文件没有成功");
+			System.err.println(Util.getCurrentTime()+"write file fail");
 			e.printStackTrace();
 			return true;
 			//return false;

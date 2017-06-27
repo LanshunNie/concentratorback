@@ -1,6 +1,7 @@
 package com.hit.heat.cn;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;  
 
 import org.jfree.ui.LengthAdjustmentType;
 
@@ -83,9 +84,35 @@ public class test {
 			}
 		}
 	}
+	
 
+	public static byte[] intToByteArray(final long integer) {
+	int byteNum = (40 -Long.numberOfLeadingZeros (integer < 0 ? ~integer : integer))/ 8;
+	byte[] byteArray = new byte[4];
+	
+	for (int n = 0; n < byteNum; n++)
+	byteArray[3 - n] = (byte) (integer>>> (n * 8));
+	
+	return (byteArray);
+	}
+	//byte 数组与 long 的相互转换  
+    public static byte[] longToBytes(long x) {  
+    	 ByteBuffer buffer = ByteBuffer.allocate(8);
+        buffer.putLong(0, x);  
+        return buffer.array();  
+    } 
 	public static void main(String[] args) throws IOException {
-		change();
+		//change();
+		long epoch = System.currentTimeMillis()/1000;
+		System.out.println(epoch);
+		//byte[] BBB = intToByteArray(256);
+		byte[] BBB = longToBytes(epoch);
+		for (int i = 0;i<BBB.length;i++){
+			System.out.println(BBB[i]);
+		}
+	    String stri = "0001";
+	    int j = Integer.parseInt(stri);
+	    System.out.println("j"+j);
 		//byte[] command = new byte[10];
 //		command[0] = 0;
 //		command[1] = 1;

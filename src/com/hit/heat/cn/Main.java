@@ -14,7 +14,7 @@ public class Main {
 		//SqlOperate.connect("jdbc:sqlite:/home/fan/topo3.db");
 		SqlOperate.connect("jdbc:sqlite:topo3.db");
 		SqlOperate.close();
-		System.out.println(Util.getCurrentTime()+" ======启动集中器后台======");
+		System.out.println(Util.getCurrentTime()+" ======start concentrator back======");
 //		SqlOperate.connect("jdbc:sqlite:/home/gxn/Desktop/topo3.db");
 		coServer = new ConsoleMainServer();
 	}

@@ -33,7 +33,7 @@ public class ReadFTPFile {
 //		FileInputStream inFile = null;
 		InputStream in = null;
 		FTPClient ftpClient = null;
-		System.out.println(Util.getCurrentTime()+" 开始读取绝对路径" + ftpPath + "文件!");
+		System.out.println(Util.getCurrentTime()+" start read absolute path" + ftpPath + "file!");
 		try {
 			ftpClient = FTPUtil.getFTPClient(ftpHost, ftpPassword, ftpUserName,
 					ftpPort);
@@ -50,20 +50,20 @@ public class ReadFTPFile {
 			if(!FTPReply.isPositiveCompletion(reply))
 			{
 				ftpClient.disconnect();
-				System.err.println(Util.getCurrentTime()+" 发生错误啦×××××××××××××××××××");
+				System.err.println(Util.getCurrentTime()+" wrong**********");
 			}
 			in = ftpClient.retrieveFileStream(fileName);
 //			System.out.println(ftpPath+fileName);
 		} catch (FileNotFoundException e) {
-			System.err.println(Util.getCurrentTime()+" 没有找到" + ftpPath + "文件");
+			System.err.println(Util.getCurrentTime()+" did not find" + ftpPath + "file");
 			e.printStackTrace();
 			return "下载配置文件失败，请联系管理员.";
 		} catch (SocketException e) {
-			System.err.println(Util.getCurrentTime()+" 连接FTP失败.");
+			System.err.println(Util.getCurrentTime()+" connect ftp fail.");
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
-			System.err.println(Util.getCurrentTime()+" 文件读取错误。");
+			System.err.println(Util.getCurrentTime()+" read file wrong");
 			e.printStackTrace();
 			return "配置文件读取失败，请联系管理员.";
 		}
@@ -75,7 +75,7 @@ public class ReadFTPFile {
 					resultBuffer.append(data + "\n");
 				}
 			} catch (IOException e) {
-				System.err.println(Util.getCurrentTime()+" 文件读取错误。");
+				System.err.println(Util.getCurrentTime()+" read file wrong");
 				e.printStackTrace();
 				return "配置文件读取失败，请联系管理员.";
 			}finally{
@@ -86,7 +86,7 @@ public class ReadFTPFile {
 				}
 			}
 		}else{
-			System.err.println(Util.getCurrentTime()+" in为空，不能读取。");
+			System.err.println(Util.getCurrentTime()+" in is null，cannot be read。");
 			return "配置文件读取失败，请联系管理员.";
 		}
 		return resultBuffer.toString();

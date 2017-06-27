@@ -26,6 +26,7 @@ import java.util.TimerTask;
 import com.hit.heat.util.Frag_Recb;
 import com.hit.heat.model.Energy;
 
+import org.jfree.chart.axis.NumberTickUnit;
 //import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -171,7 +172,7 @@ public class ConsoleMainServer {
 		SqlOperate.CommandCache_get();
 		try {
 			/***********************************************************/
-			int drop_length = 1;
+			int drop_length = 365;
 			Appdrop.schedule(new TimerTask() {
 				public void run() {
 					try {
@@ -222,8 +223,8 @@ public class ConsoleMainServer {
 			e.printStackTrace();
 		}
 		//add the information of centor
-		String rootplace = "000000";
-		SqlOperate.NodePlace_a(parameter.getId(), "000", rootplace);
+		//String rootplace = "000000";
+		//SqlOperate.NodePlace_a(parameter.getId(), "000", rootplace,"000");
 
 		try {
 			g_systemParam = Util.parseSystemParamFromFile("sysparam.json");
@@ -290,7 +291,7 @@ public class ConsoleMainServer {
 											currentTime.getSecond()),
 									getSocketAddressByName(parameter.getRootAddr(), CorrectTimePort));
 							Count++;
-							System.out.println(Util.getCurrentTime() + " sendROOT校时 " + currentTime.getHour() + ":"
+							System.out.println(Util.getCurrentTime() + " send ROOT correct time " + currentTime.getHour() + ":"
 									+ currentTime.getMinute() + ":" + currentTime.getSecond());// for
 
 						} else {
@@ -363,7 +364,7 @@ public class ConsoleMainServer {
 
 			@Override
 			public void actionPerformed(String addr) {
-				System.out.println(addr + "掉线了");
+				System.out.println(addr + "has dropped");
 				// TODO Auto-generated catch block
 				//generate information ,report to remote client and tools
 				// nettyClient.asyncWriteAndFlush(formatUcastDataToJsonStr("Warning",addr,"warning"));//formatUcastDataToJsonStr(addr,
@@ -382,7 +383,7 @@ public class ConsoleMainServer {
 		heartProxy.registerOnLineHandler(new HeartOnLineHandler() {
 			@Override
 			public void actionPerformed(String addr) {
-				System.out.println(addr + "在线");
+				System.out.println(addr + " online");
 				if (remoteClient.remoteHostIsOnline()) {
 					try {
 						remoteClient.asyncWriteAndFlush(formatDataToJsonStr("heart_succeed", addr, "online"));
@@ -413,7 +414,7 @@ public class ConsoleMainServer {
 			@Override
 			public void actionPerformed(List<String> failIpList) {
 				// TODO Auto-generated method
-				System.out.println("调用！");
+				System.out.println("using！");
 				JSONObject msgJson = null;
 				if (failIpList == null) {
 					System.out.println(" config succeed");
@@ -441,7 +442,7 @@ public class ConsoleMainServer {
 				sb.append("有节点配置失败，配置失败节点ip为\r\n");
 				for (String ip : failIpList) {
 					sb.append("  " + ip + "\r\n");
-					System.out.println("有节点配置失败，配置失败节点ip为:  " + ip);
+					System.out.println("a node configed failure. The Node IP is:" + ip);
 				}
 				try {
 					msgJson = new JSONObject();
@@ -491,7 +492,7 @@ public class ConsoleMainServer {
 			public void run() {
 				heartbeat();
 			}
-		}, 0, 1000 * 8);
+		}, 0, 1000 * parameter.getHeartIntSec());
 		// }, 0, 1000 * parameter.getHeartIntSec() * 1);
 		// // timing command down
 		// CommandDownTimer.schedule(new TimerTask() {
@@ -519,11 +520,11 @@ public class ConsoleMainServer {
 		if (nioUdpServer == null) {
 			throw new IOException();
 		}
-		System.out.println(Util.getCurrentTime() + " Send to ROOT 命令为:" + Util.formatByteToByteStr(message));// for
+		System.out.println(Util.getCurrentTime() + " Send to ROOT command is:" + Util.formatByteToByteStr(message));// for
 		nioUdpServer.sendto(message, getSocketAddressByName(parameter.getRootAddr(), parameter.getRootPort()));// for
 																												// //
 																												// log
-		System.out.println("Send To Root Message over");// for lag
+		//System.out.println("Send To Root Message over");// for lag
 	}
 
 	
@@ -536,16 +537,67 @@ public class ConsoleMainServer {
 		// parameter.getupperPort());// for
 
 		// byte[] currenttime = new byte[Util.getCurrentTime().length()];
-		byte[] currenttime = Util.getCurrentTime().getBytes();
+		//byte[] currenttime = Util.getCurrentTime().getBytes();
 		// System.out.println(currenttime);
-		boolean flag = Util.Online_Judge(synParameter.getBitmap());
-		String flag_b;
-		if (flag == false)
-			flag_b = "0";
-		else
-			flag_b = "1";
+		byte[] heartlength_b = new byte[1];
+		heartlength_b[0] = 21; 
+		byte[] heart_flag = new byte[1];
+		heart_flag[0] = 0;
+		long epocurrent = System.currentTimeMillis()/1000;
+		byte[] currenttime = Util.longToBytes(epocurrent);
+		byte[] currenttime_b = new byte[6];
+		System.arraycopy(currenttime, currenttime.length-6, currenttime_b, 0, 6);
+		byte[] status_b = new byte[1]; 
+		boolean flag_b = Util.Online_Judge(synParameter.getBitmap());
+		boolean flag_c = true;
+		try {
+			flag_c = SqlOperate.CommandCache_empty();
+		} catch (SQLException e3) {
+			// TODO Auto-generated catch block
+			e3.printStackTrace();
+		}
+		if (flag_b == false){
+			if (flag_c == true){
+				status_b[0] = 1;
+			}else{
+				status_b[0] =0;
+			}
+		}else{
+			if (flag_c == true){
+				status_b[0] = 3;
+			}else{
+				status_b[0] =2;
+			}
+		}
 		String status = String.valueOf(Util.StatusJuage(flag));
-		byte[] centor = parameter.getId().getBytes();
+		String str_centor = parameter.getId();
+		byte[] centor = Util.intToByteArray(Integer.parseInt(str_centor));
+		//System.out.println(centor[0]+"a"+centor[1]+"b"+centor[2]+"c"+centor[3]);
+		byte[] centor_b = new byte[3];
+		System.arraycopy(centor, centor.length-3, centor_b, 0, 3);
+		//System.out.println(centor_b[0]+"a"+centor_b[1]+"b"+centor_b[2]);
+		int Netcount = 0;
+		int Appcount = 0;
+		try {
+			Netcount = SqlOperate.NetMonitor_count();
+		} catch (SQLException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		try {
+			Appcount = SqlOperate.ApplicationData_count();
+		} catch (SQLException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		byte[] Net_count = Util.intToByteArray(Netcount);
+		
+		byte[] App_count = Util.intToByteArray(Appcount);
+		//System.out.println(Net_count.length+"@@@@@"+App_count.length);
+		byte[] checksum = new byte[1];
+		 checksum[0] = 0;
+		//byte[] centor = parameter.getId().getBytes();
+		
 		// System.arraycopy(centor, 0,
 		// Util.formatByteStrToByte(parameter.getId()), 0,
 		// parameter.getId().length());
@@ -557,21 +609,29 @@ public class ConsoleMainServer {
 		}
 		//System.out.println(centor);
 		
-		int mesge_length = currenttime.length + flag_b.getBytes().length + centor.length + status.getBytes().length;
+		
 		//System.out.println("current-l:"+currenttime.length + " centor-l:" + centor.length);
 		//System.out.println("mesge_l:"+mesge_length);
-		byte[] mesge = new byte[mesge_length];
+		byte[] mesge = new byte[21];
 		//System.out.println(currenttime);
-		System.arraycopy(currenttime, 0, mesge, 0, currenttime.length);
+		System.arraycopy(heartlength_b, 0, mesge, 0, 1);
 		
 		//mesge[currenttime.length] = flag_b.getBytes();
-		System.arraycopy(flag_b.getBytes(), 0, mesge, currenttime.length, flag_b.getBytes().length);
-		System.arraycopy(centor, 0, mesge, currenttime.length + flag_b.getBytes().length, centor.length);
+		System.arraycopy(heart_flag, 0, mesge, 1, 1);
+		System.arraycopy(currenttime_b, 0, mesge, 2, 6);
 		//mesge[currenttime.length + 1 + centor.length] = status;
-		System.arraycopy(status.getBytes(), 0, mesge, currenttime.length + flag_b.getBytes().length+centor.length,status.getBytes().length);
+		System.arraycopy(status_b, 0, mesge, 8,1);
+		System.arraycopy(centor_b, 0, mesge, 9,3);
+		System.arraycopy(App_count, 0, mesge, 12,4);
+		System.arraycopy(Net_count, 0, mesge, 16,4);
+		
+		System.arraycopy(checksum, 0, mesge, 20,1);
 		try {
+			String str =new String(mesge);
+			//System.out.println("str"+str);
+			byte[] send_mes = str.getBytes();
 			SendToupperMessage(mesge);
-			System.out.println(Util.getCurrentTime() + " send心跳包以保持GPRS在线!");
+			System.out.println(Util.getCurrentTime() + " Heartbeat Nnm:"+Netcount+",Anum:"+Appcount);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -663,7 +723,7 @@ public class ConsoleMainServer {
 			byte[] ack = new byte[message.length - 3];
 			System.arraycopy(message, 3, ack, 0, message.length - 3);
 			if (ack[0] == 0x43) {
-				System.out.println("收到ACK " + Count);
+				System.out.println("get ACK " + Count);
 				Count = 0;
 			}
 			return null;
@@ -725,7 +785,7 @@ public class ConsoleMainServer {
 		// @SuppressWarnings({ "unchecked" })
 		@Override
 		public String messageHandler(String message) {
-			System.out.println(Util.getCurrentTime() + " 前台command:" + message);
+			System.out.println(Util.getCurrentTime() + " front command:" + message);
 
 			Object retObject;
 			try {
@@ -743,25 +803,25 @@ public class ConsoleMainServer {
 
 					byte[] cmd = Util.formatByteStrToByte(((JSONObject) retObject).getString("pama_data"));
 					byte[] buffer = null;
-					StringBuilder sb = new StringBuilder(Util.getCurrentTime() + " 下发command为  ");
+					StringBuilder sb = new StringBuilder(Util.getCurrentTime() + " send down command is  ");
 					switch (type) {
 					case "mcast":
 						// System.out.println(222222);
 						buffer = Util.packetMcastSend(cmd);
 						if (buffer[2] == (byte) 0x00) {
-							System.out.println(Util.getCurrentTime() + " 收到的command为 上报网络监测数据");
+							System.out.println(Util.getCurrentTime() + " command is sending back NetMonitor data");
 							sb.append("上报能耗+拓扑");
 						} else if (buffer[2] == (byte) 0x01) {
-							System.out.println(Util.getCurrentTime() + " 收到的command为 上报网络参数");
+							System.out.println(Util.getCurrentTime() + " command is sending back parameter");
 							sb.append("上报网络参数");
 						} else if (buffer[2] == (byte) 0X80) {
-							System.out.println(Util.getCurrentTime() + " 收到的command为 multicast表操作command");
+							System.out.println(Util.getCurrentTime() + " command is multicast meter operate");
 							sb.append("multicast读表command");
 						} else if (buffer[2] == (byte) 0x82) {
-							System.out.println(Util.getCurrentTime() + " 收到的command为 command烧写");
+							System.out.println(Util.getCurrentTime() + " command is command loading");
 							sb.append("初始的multicast读表command");
 						} else {
-							System.out.println(Util.getCurrentTime() + " 出错啦~~");
+							System.out.println(Util.getCurrentTime() + " wrong~~");
 						}
 						// try {
 						// cmdFile.append(sb.toString() + buffer);
@@ -780,19 +840,19 @@ public class ConsoleMainServer {
 						bitMap.setPartReUploadList(parseAddrFromStr(((JSONObject) retObject).getString("addrList")));
 						buffer = Util.packageUnicastSend(cmd, bitMap.getBitMap());
 						if (buffer[3 + bitMap.getBitMap().length] == (byte) 0X80) {
-							System.out.println(Util.getCurrentTime() + " 收到的command为  局部multicast读表command");
+							System.out.println(Util.getCurrentTime() + " command is local multicast read meter");
 							// System.out.println("buffer:" +
 							// Arrays.toString(buffer));
 							// System.out.println(Arrays.toString(bitMap.getBitMap()));
 							sb.append("局部multicast读表command");
 						} else if (buffer[3 + bitMap.getBitMap().length] == (byte) 0x82) {
-							System.out.println(Util.getCurrentTime() + " 收到的command为 初始的局部multicast 读表command");
+							System.out.println(Util.getCurrentTime() + "command is  initial local multicast read meter");
 							System.out.println(Util.getCurrentTime() + " buffer:" + Arrays.toString(buffer));
 							System.out
 									.println(Util.getCurrentTime() + " bitmap:" + Arrays.toString(bitMap.getBitMap()));
 							sb.append("初始的局部multicast 读表command");
 						} else {
-							System.out.println(Util.getCurrentTime() + " 出错啦~~~");
+							System.out.println(Util.getCurrentTime() + " wrong~~~");
 						}
 						
 						try {
@@ -805,19 +865,19 @@ public class ConsoleMainServer {
 					case "mcast_ack":
 						buffer = Util.packetMcastSend(cmd);
 						if (buffer[2] == (byte) 0x41) {
-							System.out.println(Util.getCurrentTime() + " 收到的command为 周期配置");
+							System.out.println(Util.getCurrentTime() + " command is sending back NetMonitor data");
 							sb.append("周期配置");
 						} else if (buffer[2] == (byte) 0x40) {
-							System.out.println(Util.getCurrentTime() + " 收到的command为 配置网络参数");
+							System.out.println(Util.getCurrentTime() + " command is sending back parameter");
 							sb.append("配置网络参数");
 						} else if (buffer[2] == (byte) 0xC1) {
-							System.out.println(Util.getCurrentTime() + " 收到的command为 multicast节点初始化command");
+							System.out.println(Util.getCurrentTime() + " command is multicast meter operate");
 							sb.append("multicast节点初始化command");
 						} else if (buffer[2] == (byte) 0xC0) {
-							System.out.println(Util.getCurrentTime() + " 收到的command为 multicast节点重启command");
+							System.out.println(Util.getCurrentTime() + " command is command loading");
 							sb.append("multicast节点重启command");
 						} else {
-							System.out.println(Util.getCurrentTime() + " 出错啦~~");
+							System.out.println(Util.getCurrentTime() + " wrong~~");
 						}
 						
 						try {
@@ -834,13 +894,13 @@ public class ConsoleMainServer {
 						bitMap.setPartReUploadList(parseAddrFromStr(((JSONObject) retObject).getString("addrList")));
 						buffer = Util.packageUnicastSend(cmd, bitMap.getBitMap());
 						if (buffer[3 + bitMap.getBitMap().length] == (byte) 0xC0) {
-							System.out.println(Util.getCurrentTime() + " 收到的command为 局部multicast节点初始化");
+							System.out.println(Util.getCurrentTime() + " command is local multicast node initial");
 							sb.append("局部multicast节点初始化");
 						} else if (buffer[3 + bitMap.getBitMap().length] == (byte) 0xC1) {
-							System.out.println(Util.getCurrentTime() + " 收到的command为 局部multicast节点重启");
+							System.out.println(Util.getCurrentTime() + " command is  local multicast node restart");
 							sb.append("局部multicast节点重启");
 						} else {
-							System.out.println(Util.getCurrentTime() + " 出错啦~~~");
+							System.out.println(Util.getCurrentTime() + " wrong~~~");
 						}
 
 						try {
@@ -853,7 +913,7 @@ public class ConsoleMainServer {
 
 					case "schedule":// broadcast schedule
 						try {
-							System.out.println(Util.getCurrentTime() + " 收到的command为广播配置调度"
+							System.out.println(Util.getCurrentTime() + " command is muticastconfig schedule"
 									+ ((JSONObject) retObject).getString(("pama_data")));
 							sb.append("下发调度" + ((JSONObject) retObject).getString(("pama_data")));
 							JSONObject synJson = new JSONObject(((JSONObject) retObject).getString(("pama_data")));
@@ -885,7 +945,7 @@ public class ConsoleMainServer {
 						try {
 
 							currect_rate = Integer.valueOf(((JSONObject) retObject).getString(("pama_data")));
-							System.out.println(Util.getCurrentTime() + "收到的command为更改校时频率 pama_data:"
+							System.out.println(Util.getCurrentTime() + "command is change correct time sequence pama_data:"
 									+ ((JSONObject) retObject).getString(("pama_data")));
 
 							CorrectTimer.cancel();
@@ -905,7 +965,7 @@ public class ConsoleMainServer {
 											Count++;
 											System.out.println("sendcorrect timecommand " + currentTime.getSecond());
 										} else {
-											System.out.println("send跟节点重启command" + Count);
+											System.out.println("send and node restart command" + Count);
 											nioCorrectTime.sendto(
 													Util.getCorrectTimeMessage2(0x14, currentTime.getHour(),
 															currentTime.getMinute(), currentTime.getSecond()),
@@ -927,7 +987,7 @@ public class ConsoleMainServer {
 					// for use
 					case "pama_syn":
 						try {
-							System.out.println(Util.getCurrentTime() + " 收到的command为修改网络调度下发周期"
+							System.out.println(Util.getCurrentTime() + " command is change the change the schedule down period"
 									+ ((JSONObject) retObject).getString(("pama_data")));
 
 							JSONObject pama_synJson = new JSONObject(((JSONObject) retObject).getString(("pama_data")));
@@ -973,7 +1033,7 @@ public class ConsoleMainServer {
 	}
 
 	public String Upper_messageHandler(String message) {
-		System.out.println(Util.getCurrentTime() + " centorcommand:" + message);
+		System.out.println(Util.getCurrentTime() + " front command:" + message);
 
 		Object retObject;
 		try {
@@ -991,25 +1051,25 @@ public class ConsoleMainServer {
 
 				byte[] cmd = Util.formatByteStrToByte(((JSONObject) retObject).getString("pama_data"));
 				byte[] buffer = null;
-				StringBuilder sb = new StringBuilder(Util.getCurrentTime() + " 下发command为  ");
+				StringBuilder sb = new StringBuilder(Util.getCurrentTime() + " send down command is  ");
 				switch (type) {
 				case "mcast":
 					// System.out.println(222222);
 					buffer = Util.packetMcastSend(cmd);
 					if (buffer[2] == (byte) 0x00) {
-						System.out.println(Util.getCurrentTime() + " 收到的command为 上报网络监测数据");
+						System.out.println(Util.getCurrentTime() + " command:sending back NetMonitor data");
 						sb.append("上报能耗+拓扑");
 					} else if (buffer[2] == (byte) 0x01) {
-						System.out.println(Util.getCurrentTime() + " 收到的command为 上报网络参数");
+						System.out.println(Util.getCurrentTime() + " command:sending back parameter");
 						sb.append("上报网络参数");
 					} else if (buffer[2] == (byte) 0X80) {
-						System.out.println(Util.getCurrentTime() + " 收到的command为 multicast表操作command");
+						System.out.println(Util.getCurrentTime() + " command:multicast meter operate");
 						sb.append("multicast读表command");
 					} else if (buffer[2] == (byte) 0x82) {
-						System.out.println(Util.getCurrentTime() + " 收到的command为 command烧写");
+						System.out.println(Util.getCurrentTime() + " command:loading");
 						sb.append("初始的multicast读表command");
 					} else {
-						System.out.println(Util.getCurrentTime() + " 出错啦~~");
+						System.out.println(Util.getCurrentTime() + " wrong~~");
 					}
 					// try {
 					// cmdFile.append(sb.toString() + buffer);
@@ -1028,18 +1088,19 @@ public class ConsoleMainServer {
 					bitMap.setPartReUploadList(parseAddrFromStr(((JSONObject) retObject).getString("addrList")));
 					buffer = Util.packageUnicastSend(cmd, bitMap.getBitMap());
 					if (buffer[3 + bitMap.getBitMap().length] == (byte) 0X80) {
-						System.out.println(Util.getCurrentTime() + " 收到的command为  局部multicast读表command");
+						System.out.println(Util.getCurrentTime() + " command:local multicast read meter");
 						// System.out.println("buffer:" +
 						// Arrays.toString(buffer));
 						// System.out.println(Arrays.toString(bitMap.getBitMap()));
 						sb.append("局部multicast读表command");
 					} else if (buffer[3 + bitMap.getBitMap().length] == (byte) 0x82) {
-						System.out.println(Util.getCurrentTime() + " 收到的command为 初始的局部multicast 读表command");
+						System.out.println(Util.getCurrentTime() + "command:initial local multicast read meter");
 						System.out.println(Util.getCurrentTime() + " buffer:" + Arrays.toString(buffer));
-						System.out.println(Util.getCurrentTime() + " bitmap:" + Arrays.toString(bitMap.getBitMap()));
+						System.out
+								.println(Util.getCurrentTime() + " bitmap:" + Arrays.toString(bitMap.getBitMap()));
 						sb.append("初始的局部multicast 读表command");
 					} else {
-						System.out.println(Util.getCurrentTime() + " 出错啦~~~");
+						System.out.println(Util.getCurrentTime() + " wrong~~~");
 					}
 					
 					try {
@@ -1052,19 +1113,19 @@ public class ConsoleMainServer {
 				case "mcast_ack":
 					buffer = Util.packetMcastSend(cmd);
 					if (buffer[2] == (byte) 0x41) {
-						System.out.println(Util.getCurrentTime() + " 收到的command为 周期配置");
+						System.out.println(Util.getCurrentTime() + " command:sending back NetMonitor data");
 						sb.append("周期配置");
 					} else if (buffer[2] == (byte) 0x40) {
-						System.out.println(Util.getCurrentTime() + " 收到的command为 配置网络参数");
+						System.out.println(Util.getCurrentTime() + " command is sending back parameter");
 						sb.append("配置网络参数");
 					} else if (buffer[2] == (byte) 0xC1) {
-						System.out.println(Util.getCurrentTime() + " 收到的command为 multicast节点初始化command");
+						System.out.println(Util.getCurrentTime() + " command is multicast meter operate");
 						sb.append("multicast节点初始化command");
 					} else if (buffer[2] == (byte) 0xC0) {
-						System.out.println(Util.getCurrentTime() + " 收到的command为 multicast节点重启command");
+						System.out.println(Util.getCurrentTime() + " command is command loading");
 						sb.append("multicast节点重启command");
 					} else {
-						System.out.println(Util.getCurrentTime() + " 出错啦~~");
+						System.out.println(Util.getCurrentTime() + " wrong~~");
 					}
 					
 					try {
@@ -1081,13 +1142,13 @@ public class ConsoleMainServer {
 					bitMap.setPartReUploadList(parseAddrFromStr(((JSONObject) retObject).getString("addrList")));
 					buffer = Util.packageUnicastSend(cmd, bitMap.getBitMap());
 					if (buffer[3 + bitMap.getBitMap().length] == (byte) 0xC0) {
-						System.out.println(Util.getCurrentTime() + " 收到的command为 局部multicast节点初始化");
+						System.out.println(Util.getCurrentTime() + " command is local multicast node initial");
 						sb.append("局部multicast节点初始化");
 					} else if (buffer[3 + bitMap.getBitMap().length] == (byte) 0xC1) {
-						System.out.println(Util.getCurrentTime() + " 收到的command为 局部multicast节点重启");
+						System.out.println(Util.getCurrentTime() + " command is  local multicast node restart");
 						sb.append("局部multicast节点重启");
 					} else {
-						System.out.println(Util.getCurrentTime() + " 出错啦~~~");
+						System.out.println(Util.getCurrentTime() + " wrong~~~");
 					}
 
 					try {
@@ -1100,7 +1161,7 @@ public class ConsoleMainServer {
 
 				case "schedule":// broadcast schedule
 					try {
-						System.out.println(Util.getCurrentTime() + " 收到的command为广播配置调度"
+						System.out.println(Util.getCurrentTime() + " command is muticastconfig schedule"
 								+ ((JSONObject) retObject).getString(("pama_data")));
 						sb.append("下发调度" + ((JSONObject) retObject).getString(("pama_data")));
 						JSONObject synJson = new JSONObject(((JSONObject) retObject).getString(("pama_data")));
@@ -1117,8 +1178,8 @@ public class ConsoleMainServer {
 						synParameter.setFlag(true);
 						// System.out.println("1111111110");
 						Util.writeSynConfigParamToFile(synParameter, "GSynConfig.json");
-						TunSendToRootMessage(
-								packScheduleConfigData((Util.formatByteStrBitmapToBytes(synJson.getString("bitmap")))));
+						TunSendToRootMessage(packScheduleConfigData(
+								(Util.formatByteStrBitmapToBytes(synJson.getString("bitmap")))));
 
 						synStateFlag = true;
 						synJson = null;
@@ -1132,7 +1193,7 @@ public class ConsoleMainServer {
 					try {
 
 						currect_rate = Integer.valueOf(((JSONObject) retObject).getString(("pama_data")));
-						System.out.println(Util.getCurrentTime() + "收到的command为更改校时频率 pama_data:"
+						System.out.println(Util.getCurrentTime() + "command is change correct time sequence pama_data:"
 								+ ((JSONObject) retObject).getString(("pama_data")));
 
 						CorrectTimer.cancel();
@@ -1152,7 +1213,7 @@ public class ConsoleMainServer {
 										Count++;
 										System.out.println("sendcorrect timecommand " + currentTime.getSecond());
 									} else {
-										System.out.println("send跟节点重启command" + Count);
+										System.out.println("send and node restart command" + Count);
 										nioCorrectTime.sendto(
 												Util.getCorrectTimeMessage2(0x14, currentTime.getHour(),
 														currentTime.getMinute(), currentTime.getSecond()),
@@ -1174,7 +1235,7 @@ public class ConsoleMainServer {
 				// for use
 				case "pama_syn":
 					try {
-						System.out.println(Util.getCurrentTime() + " 收到的command为修改网络调度下发周期"
+						System.out.println(Util.getCurrentTime() + " command is change the change the schedule down period"
 								+ ((JSONObject) retObject).getString(("pama_data")));
 
 						JSONObject pama_synJson = new JSONObject(((JSONObject) retObject).getString(("pama_data")));
@@ -1195,9 +1256,9 @@ public class ConsoleMainServer {
 						byte[] bit = Util.formatByteStrBitmapToBytes(pama_synJson.getString("bitmap"));
 						CurrentTime currentTime = Util.getCurrentDateTime(Util.getCurrentDateTime());
 						System.out.println("!!!!!!!!!!!!!!!!!!");
-						SendToRootSynMsg(Util.getSynMessage(pama_synJson.getInt("seqNum"), pama_synJson.getInt("level"),
-								currentTime.getHour(), currentTime.getMinute(), currentTime.getSecond(),
-								pama_synJson.getInt("period"), bit));
+						SendToRootSynMsg(Util.getSynMessage(pama_synJson.getInt("seqNum"),
+								pama_synJson.getInt("level"), currentTime.getHour(), currentTime.getMinute(),
+								currentTime.getSecond(), pama_synJson.getInt("period"), bit));
 						synStateFlag = true;
 						pama_synJson = null;
 					} catch (IOException e) {
@@ -1372,7 +1433,7 @@ public class ConsoleMainServer {
 				System.out.print("-----------------------------");
 				byte[] orpl = new byte[message.length - 3];
 				System.arraycopy(message, 3, orpl, 0, message.length - 3);
-				System.out.println(addr + "能耗：" + Util.formatBytesToStr(message));
+				System.out.println(addr + "energy：" + Util.formatBytesToStr(message));
 
 				
 				Energy en = Util.Create_Energy(addr, orpl);
@@ -1419,7 +1480,7 @@ public class ConsoleMainServer {
 			int minute = Integer.parseInt(String.valueOf(String.format("%02X", orpl[3])), 16);
 			int second = Integer.parseInt(String.valueOf(String.format("%02X", orpl[4])), 16);
 
-			System.out.println(Util.getCurrentTime() + " 同步状态:" + synStateFlag + " recvLevel:" + recvLevel + " " + hour
+			System.out.println(Util.getCurrentTime() + " syn status:" + synStateFlag + " recvLevel:" + recvLevel + " " + hour
 					+ ":" + minute + ":" + second);
 			// System.out.println();
 			if (!synStateFlag) {
@@ -1508,28 +1569,29 @@ public class ConsoleMainServer {
 	class UpperUdpMessageHandler implements NIOUDPServerMsgHandler {
 		@Override
 		public byte[] messageHandler(String addr, byte[] message) {
-			String s = new String(message);
-			System.out.println("Upper Udp Message Handler message:" + s);//
+			//String s = new String(message);
+			//System.out.println("Upper Udp Message Handler message:" + s);//
 			// for
 			// System.out.println(addr+" "+ " "+ message.length + " "
 			// +message[0]);
-			// System.out.println(message[0]+""+""+message[1]+""+message[2]+""+message[3]+"");
+			//System.out.println("!!!"+message[0]+" "+message[1]+" "+message[2]+" "+message[3]+" " );
 			// System.out.println("s:"+s);
-			byte[] command = Util.formatByteStrToByte(s);
-			String c3 = "108ffffffff";
-			String c4 = "";
-			byte[] com3 = new byte[c3.length()];
-			for (int i = 0; i < 11; i++) {
-				com3[i] = (byte) Integer.parseInt(s.substring(i, i + 1), 16);
-			}
-			for (int i = 0; i < 11; i++) {
-				//System.out.println(" com:" + i + ":" + com3[i]);
-			}
-			command = com3;
+			//byte[] command = Util.formatByteStrToByte(s);
+//			String c3 = "108ffffffff";
+//			String c4 = "";
+//			byte[] com3 = new byte[c3.length()];
+//			for (int i = 0; i < 11; i++) {
+//				com3[i] = (byte) Integer.parseInt(s.substring(i, i + 1), 16);
+//			}
+//			for (int i = 0; i < 11; i++) {
+//				//System.out.println(" com:" + i + ":" + com3[i]);
+//			}
+//			command = com3;
 			//System.out.println("command[0] = " + command[0]); // log
 			// byte[] command = Util.formatByteStrToByte(s);
 			// System.out.println("Start command handler");// for log
-			CommandHandler(command);
+			CommandHandler(message);
+			//CommandHandler(command);
 			System.out.println(Util.getCurrentTime() + " command handle over");// for
 																				// log
 			// System.out.println(s);
@@ -1544,8 +1606,10 @@ public class ConsoleMainServer {
 		// int hour = Integer.parseInt(times[0]);
 		// int minute = Integer.parseInt(times[1]);
 		byte[] bit = new byte[144];
-		byte[] bitmap = new byte[] { -1, -128, 35, 84, 72, -128, 61, -2, 16, 2, 4, 68, 90, 48, 0, 0, 8, 10 };
-		// bitmap = synParameter.getBitmap();
+		//byte[] bitmap = new byte[] { -1, -128, 35, 84, 72, -128, 61, -2, 16, 2, 4, 68, 90, 48, 0, 0, 8, 10 };
+		//byte[] bitmap = synParameter.getBitmap();
+		byte[] bitmap = new byte[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+		
 		int i, j, t = 0;
 		byte bitmap_a = 0;
 		// System.out.print(" ");
@@ -1594,23 +1658,22 @@ public class ConsoleMainServer {
 		int hour = Integer.parseInt(times[0]);
 		int minute = Integer.parseInt(times[1]);
 		int second = Integer.parseInt(times[2]);
-		
 		int minutes = minute % 10;
 		int count = hour * 6 + minute / 10;
 		int i = 1;
-		System.out.println("hour:" + hour + " minute:" + minute + " second:" + second+" minutes:"+minutes);
-		 System.out.print(" ");
-		 for(i = 0;i<6;i++){
-		 System.out.print(" "+i);
-		 }
-		 for(i = 0;i<24;i++){
-		 System.out.print(i);
-		 for (int j = 0;j<6;j++){
-		 System.out.print(" "+bit[6*i+j]);
-		 }
-		 System.out.println("");
-		 }
-		 System.out.println("|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
+		//System.out.println("hour:" + hour + " minute:" + minute + " second:" + second+" minutes:"+minutes);
+		// System.out.print(" ");
+//		 for(i = 0;i<6;i++){
+//		 System.out.print(" "+i);
+//		 }
+//		 for(i = 0;i<24;i++){
+//		 System.out.print(i);
+//		 for (int j = 0;j<6;j++){
+//		 System.out.print(" "+bit[6*i+j]);
+//		 }
+//		 System.out.println("");
+//		 }
+//		 System.out.println("|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
 		// while (bit[count + i] != 1) {
 		// i += 1;
 		// }
@@ -1625,7 +1688,7 @@ public class ConsoleMainServer {
 				while (bit[count + i] != 1) {
 					i += 1;
 				}
-				System.out.println("active difference :" + difference + " i:" + i);
+				//System.out.println("active difference :" + difference + " i:" + i);
 				difference = (600 - (minutes * 60 + second)) + (i - 1) * 600 + 330;
 			}
 		} else {
@@ -1661,25 +1724,34 @@ public class ConsoleMainServer {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			filename = Util.getCurrentTime() + "-App-return";
+			final String filename1 = filename;
+			try {
+				SqlOperate.NetMonitor_count_out(count, filename);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			// SqlOperate.commandCache_a(cacheCommand);
 			//System.out.println("TunSendToRootMessage(com);");
-			System.out.println("上位机指令下发给跟节点");
-			//Upper_messageHandler(cacheCommand);
+			System.out.println("upper command send to root");
+			Upper_messageHandler(cacheCommand);
 			//TunSendToRootMessage(com);
 			Timer timer = new Timer();
 			timer.schedule(new TimerTask() {
 				public void run() {
-					System.out.println("上位机等待上报应用数据");
+					System.out.println("upper wait for application data");
+					 WriteFTPFile write = new WriteFTPFile();
+					 write.upload(parameter.getftpuser(), parameter.getftpPwd(),
+					 parameter.getftphost(),
+					 parameter.getftpPort(), filename1);
 				}
-			}, 5 * 1000);
-			//}，30 * 1000);
-			filename = Util.getCurrentTime() + "-App-return";
-			SqlOperate.NetMonitor_count_out(count, filename);
-			 WriteFTPFile write = new WriteFTPFile();
-			 write.upload(parameter.getftpuser(), parameter.getftpPwd(),
-			 parameter.getftphost(),
-			 parameter.getftpPort(), filename);
+			//}, 5 * 1000);
+			},30 * 1000);
+			
 		} else if (has_return == 2) {
+			
+			//Upper_messageHandler(cacheCommand);
 			try {
 				count = SqlOperate.ApplicationData_count();
 			} catch (SQLException e) {
@@ -1688,34 +1760,38 @@ public class ConsoleMainServer {
 			}
 			// SqlOperate.commandCache_a(cacheCommand);
 			filename = Util.getCurrentTime() + "Net-return";
+			final String filename1 = filename;
+			SqlOperate.ApplicationData_count_out(count, filename);
 			//System.out.println("TunSendToRootMessage(com);");
-			System.out.println("上位机指令下发给跟节点");
-			//Upper_messageHandler(cacheCommand);
+			System.out.println("upper command send to root");
 			Timer timer = new Timer();
 			timer.schedule(new TimerTask() {
 				public void run() {
-					System.out.println("上位机等待上报网络检测数据");
+					System.out.println("upper wait for Net Monitor data");
+					
+					 WriteFTPFile write = new WriteFTPFile();
+					 write.upload(parameter.getftpuser(), parameter.getftpPwd(),
+					 parameter.getftphost(),
+					 parameter.getftpPort(), filename1);
+					
 				}
-			}, 5 * 1000);
+			//}, 5 * 1000);
+			},30 * 1000);
 			//wait 30s
-			SqlOperate.ApplicationData_count_out(count, filename);
-			 WriteFTPFile write = new WriteFTPFile();
-			 write.upload(parameter.getftpuser(), parameter.getftpPwd(),
-			 parameter.getftphost(),
-			 parameter.getftpPort(), filename);
+			
 
 		} else if (has_return == 3) {
 			filename = "config.json";
-			System.out.println("上位机指令下发给跟节点");
+			System.out.println("upper command send to root");
 			// Upper_messageHandler(cacheCommand);
 			// TunSendToRootMessage(com);
-			System.out.println("上位机等待上报配置");
+			System.out.println("upper wait for configration");
 			 WriteFTPFile write = new WriteFTPFile();
 			 write.upload(parameter.getftpuser(), parameter.getftpPwd(),
 			 parameter.getftphost(),
 			 parameter.getftpPort(), filename);
 		} else {
-			System.out.println("上位机指令下发给跟节点");
+			System.out.println("upper command send to root");
 			//Upper_messageHandler(cacheCommand);
 		}
 	}
@@ -1751,20 +1827,24 @@ public class ConsoleMainServer {
 				System.out.println("wait for :" + wait+"s");
 				timer.schedule(new TimerTask() {
 					public void run() {
-						//System.out.println("wait for:" + wait);
-						//System.out.println("等待配置1");
 						try {
 							send_return(return1, cache1, com1);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-						
 						Net_Status_flag = 4;
 						System.out.println("Net_Status_flag change:"+Net_Status_flag);
 					}
-				}, 1 * 1000);
-				//}, wait * 1000);
+				//}, 1 * 1000);
+				}, wait * 1000);
+				try {
+					count = SqlOperate.ApplicationData_count();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
 			}
 		} else if (has_return == 2) {
 			try {
@@ -1777,7 +1857,7 @@ public class ConsoleMainServer {
 			//System.out.println("等待配置s");
 			if (cache == 1) {
 				wait = time_diffence(1, getbit());
-				System.out.println("wait for :" + wait+"s");
+				System.out.println(Util.getCurrentTime()+"wait for :" + wait+"s");
 				Timer timer = new Timer();
 				timer.schedule(new TimerTask() {
 					public void run() {
@@ -1792,10 +1872,9 @@ public class ConsoleMainServer {
 						Net_Status_flag = 4;
 						System.out.println("Net_Status_flag change:"+Net_Status_flag);
 					}
-				}, 2 * 1000);
-				//}, wait * 1000);
+				//}, 2 * 1000);
+				}, wait * 1000);
 			}
-
 		} else if (has_return == 3) {
 			try {
 				count = SqlOperate.ApplicationData_count();
@@ -1806,7 +1885,7 @@ public class ConsoleMainServer {
 			//SqlOperate.commandCache_a(cacheCommand);
 			if (cache == 1) {
 				wait = time_diffence(1, getbit());
-				System.out.println("wait for :" + wait+"s");
+				System.out.println(Util.getCurrentTime()+" wait for :" + wait+"s");
 				Timer timer = new Timer();
 				timer.schedule(new TimerTask() {
 					public void run() {
@@ -1833,7 +1912,7 @@ public class ConsoleMainServer {
 						wait = (600 - (minutes * 60 + second));
 					}
 					Timer timer = new Timer();
-					System.out.println("wait for :" + wait+"s");
+					System.out.println(Util.getCurrentTime()+" wait for :" + wait+"s");
 					timer.schedule(new TimerTask() {
 						public void run() {
 							//System.out.println("等待配置4");
@@ -1858,14 +1937,14 @@ public class ConsoleMainServer {
 									Net_Status_flag = 6;
 									System.out.println("Net_Status_flag change:"+Net_Status_flag);
 								}
-							}, 3 * 1000);
-							//}, 30 * 1000);
+							//}, 3 * 1000);
+							}, 30 * 1000);
 						}
-					}, 4 * 1000);
-					//}, wait * 1000);
+					//}, 4 * 1000);
+					}, wait * 1000);
 				} else {
 					wait = time_diffence(1, getbit());
-					System.out.println("wait for :" + wait+"s");
+					System.out.println(Util.getCurrentTime()+" wait for :" + wait+"s");
 					Timer timer = new Timer();
 					timer.schedule(new TimerTask() {
 						public void run() {
@@ -1879,8 +1958,8 @@ public class ConsoleMainServer {
 							Net_Status_flag = 4;
 							System.out.println("Net_Status_flag change:"+Net_Status_flag);
 						}
-					}, 3 * 1000);
-					//}, wait * 1000);
+					//}, 3 * 1000);
+					}, wait * 1000);
 				}
 			}
 			
@@ -1891,32 +1970,66 @@ public class ConsoleMainServer {
 	public byte[] CommandHandler(byte[] command) {
 		// System.out.println(message);
 		// count = SqlOperate.ApplicationData_count();
-
-		int send_to_net = command[0];
-		int has_return = command[1];
-		int command_length = command[2];
-		byte[] com = new byte[command_length];
-		System.arraycopy(command, 3, com, 0, command_length);
+		//System.out.println(command[0]+" "+command[1]+" "+command[2]+" "+command[3]+" "+command[4]+" end");
+		int command_length = command[0];
+		//System.out.println("command_length = "+command_length);
+		int command_flag = command[1];
+		//System.out.println("command-Flag = "+command_flag);
+		int send_to_net = command[2]>>7;
+		//System.out.println("send to net = "+send_to_net);
+		int return_type = (command[2]>>6) & 0x01;
+		//System.out.println("return_type = "+return_type);
+		int has_return = ((command[2]>>4) &0x03)>>1;
+		//System.out.println("has_return = "+has_return);
+		int broadcast = ((command[2]>>4) & 0x03)& 0x01;
+		//System.out.println("broadcast = "+broadcast);
+		int unicast_number = command[2] & 0x0F;
+		//System.out.println("unicast = "+unicast_number);
+		int com_length = command[3];
+		//System.out.println("com_length = "+com_length);
+		
+		//System.out.println("comlength = "+command.length);
+		byte com_type = command[4];
+		//int command_length = command[2];
+		byte[] com = new byte[com_length];
+		
+		System.arraycopy(command, 5, com, 0, com_length);
+		//System.out.println("com = "+com.toString());
+		int check_sum = command[5+com_length];
 		for (int i = 0; i < command_length; i++) {
 			// System.out.println("!!!" + com[i]);
 		}
-		String commands = "";
-		for (int i = 0; i < command_length; i++) {
-			commands += Integer.toHexString(com[i]);
+		String commands ="";
+		if (broadcast == 1) {
+			String com_content ="";
+//			for (int i = 0; i < com_length; i++) {
+//				System.out.println("inte "+com[i]+"!!"+Integer.toHexString(com[i]));
+//				com_content += Integer.toHexString(com[i]);
+//				
+//			}
+			com_content = new String(com);
+			//System.out.println("!!!" + com_content);
+			if (com_type == 0x01) {
+			commands = "{\"type\": \"mcast\", \"pama_data\": \""+com_content+"\"}";
+			//{"type": "mcast", "pama_data": "8005105BFE5916"}
+			System.out.println(Util.getCurrentTime()+" "+commands);
+			}
+			//String c
 		}
+		
 		 SqlOperate.commandCache_a(commands);
 		//String cacheCommand = Util.formatByteToByteStr(command);
 		//System.out.println("Command Handler:" + commands);// for log
+		//Net_Status_flag = 6;
 		System.out.println("Net_Status_flag now:"+Net_Status_flag);
 		// command = cacheCommand.;
 		// System.out.println(command[0]+" "+command[1]+" "+command[2]);// for
-		//Net_Status_flag = 6;
-		if (send_to_net == 1) {
+		
+		if (send_to_net == 1||send_to_net == -1) {
 			if (Net_Status_flag != 6) {
-				byte[] bitmap = new byte[]{-1,-128,35,84,72,-128,61,-2,16,2,4,68,90,48,0,0,8,10};
-				//byte[] bitmap = new byte[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
-				// byte[] bitmap = new byte[] { -1, -128, 35, 84, 72, -128, 61,
-				// -2, 16, 2, 4, 68, 90, 48, 0, -1, -1, -1 };
+				//byte[] bitmap = new byte[]{-1,-128,35,84,72,-128,61,-2,16,2,4,68,90,48,0,0,8,10};
+				byte[] bitmap = new byte[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+				//byte[] bitmap = synParameter.getBitmap();
 				boolean flag = Util.Online_Judge(bitmap);
 				// boolean flag = Util.Online_Judge(synParameter.getBitmap());
 				Net_Status_flag = Util.StatusJuage(flag);
@@ -1992,12 +2105,12 @@ public class ConsoleMainServer {
 						timer.schedule(new TimerTask() {
 							public void run() {
 								String message = "The net start debugging";
-								System.out.println("上位机指令发送给网络");
+								System.out.println("upper send command to net");
 								//Upper_messageHandler(commandss);
 								SqlOperate.CommandCache_get();
 							}
-						}, 3 * 1000);
-						//}, 30 * 1000);
+						//}, 3 * 1000);
+						}, 30 * 1000);
 
 						// System.out.println("SendToupperMessage(message.getBytes());");
 						// SendToupperMessage(message.getBytes());
@@ -2081,8 +2194,8 @@ public class ConsoleMainServer {
 								}
 								SqlOperate.CommandCache_get();
 							}
-						//}, 30 * 1000);
-						}, 3 * 1000);
+						}, 30 * 1000);
+						//}, 3 * 1000);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -2296,7 +2409,7 @@ public class ConsoleMainServer {
 		if (!addr.equals(rootAddr)) {
 			// System.out.println("rootAddr:"+rootAddr);
 			if (message.length == 1) {
-				System.out.println("multicast配置心跳参数" + addr);
+				System.out.println("multicast config parameter " + addr);
 				paramConfigProxy.setConfigAck(addr);
 			} else {
 				byte type = message[1];// 0 is globaltype 1 is type

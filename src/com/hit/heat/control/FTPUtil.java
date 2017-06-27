@@ -32,15 +32,15 @@ public class FTPUtil {
 			ftpClient.connect(ftpHost, ftpPort);// 连接FTP服务器
 			ftpClient.login(ftpUserName, ftpPassword);// 登陆FTP服务器
 			if (!FTPReply.isPositiveCompletion(ftpClient.getReplyCode())) {
-				System.err.println(Util.getCurrentTime()+" 未连接到FTP，用户名或密码错误。");
+				System.err.println(Util.getCurrentTime()+"  did not connect FTP,hoost name or psword wrong");
 				ftpClient.disconnect();
 			}
 		} catch (SocketException e) {
 			e.printStackTrace();
-			System.err.println(Util.getCurrentTime()+" FTP的IP地址可能错误，请正确配置。");
+			System.err.println(Util.getCurrentTime()+" FTP's IP address may be wrong. Please configure it properly.");
 		} catch (IOException e) {
 			e.printStackTrace();
-			System.err.println(Util.getCurrentTime()+" FTP的端口错误,请正确配置。");
+			System.err.println(Util.getCurrentTime()+" FTP port error. Please configure it properly.");
 		}
 		return ftpClient;
 	}

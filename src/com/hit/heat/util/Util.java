@@ -15,6 +15,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -1145,7 +1146,21 @@ public class Util {
 		}
 		return flag;
 	}
-
+	//byte 数组与 long 的相互转换  
+    public static byte[] longToBytes(long x) {  
+    	 ByteBuffer buffer = ByteBuffer.allocate(8);
+        buffer.putLong(0, x);  
+        return buffer.array();  
+    } 
+    
+    public static byte[] intToByteArray(int a) {  
+        return new byte[] {  
+            (byte) ((a >> 24) & 0xFF),  
+            (byte) ((a >> 16) & 0xFF),     
+            (byte) ((a >> 8) & 0xFF),     
+            (byte) (a & 0xFF)  
+        };  
+    }  
 	public static void main(String[] args) throws IOException, JSONException {
 		byte[] bitmap = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 16, 1, 1, 1, 1, 1, 1 };
 		Online_Judge(bitmap);

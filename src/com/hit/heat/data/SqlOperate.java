@@ -15,7 +15,15 @@ import org.w3c.dom.css.ElementCSSInlineStyle;
 import com.hit.heat.model.Energy;
 import com.hit.heat.util.Util;
 import com.hit.heat.util.rdc_EF_Control;
+import com.sun.xml.internal.ws.util.xml.CDATA;
 import com.hit.heat.util.WriteDataToFile;
+
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 
 public class SqlOperate {
 	static Connection conn = null;
@@ -236,7 +244,7 @@ public class SqlOperate {
 			time1 = cal.getTimeInMillis();
 
 			// System.out.println(filename+"-App.txt");
-			int delete_length = 1;// 配置为参数
+			int delete_length = 365;// 配置为参数
 			begintime = time1 - (delete_length * 24) * (1000 * 3600);
 			// String duration=new SimpleDateFormat("yyyy-MM-dd
 			// HH:mm:ss").format(new Date(begintime))+"~"+new
@@ -281,23 +289,20 @@ public class SqlOperate {
 
 	// 添加数据到应用数据表
 	public static void ApplicationData_a(String NodeID, String currenttime, String data) {
-		connect("jdbc:sqlite:topo3.db");
+		String temp = null;
+		temp = "null,'" + NodeID + "','" + Util.getCurrentTime() + "','" + data + "'";
+
 		try {
-			String temp = null;
-			temp = "null,'" + NodeID + "','" + Util.getCurrentTime() + "','" + data + "'";
-
 			stat.executeUpdate("insert into ApplicationData values(" + temp + ")");
-			// System.out.println(Util.getCurrentTime()+"append to
-			// ApplicationData success"+"append values:"+temp);//for log
-			// System.out.println(Util.getCurrentTime()+" app:"+NodeID);//for
-			// log
 		} catch (SQLException e) {
-			close();
-			System.out.println("ApplicationData append fail");
-			System.out.println(e.getMessage());
-
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		close();
+		//p.println(temp);
+		// System.out.println(Util.getCurrentTime()+"append to
+		// ApplicationData success"+"append values:"+temp);//for log
+		// System.out.println(Util.getCurrentTime()+" app:"+NodeID);//for
+		// log
 	}
 
 	public static int ApplicationData_count() throws SQLException {
@@ -599,11 +604,11 @@ public class SqlOperate {
 	}
 
 	// 添加数据到节点位置表
-	public static void NodePlace_a(String NodeID, String MeterID, String Place) {
+	public static void NodePlace_a(String NodeID, String MeterID, String Place,String IP) {
 		connect("jdbc:sqlite:topo3.db");
 		try {
 			String temp = null;
-			temp = "null,'" + NodeID + "','" + MeterID + "','" + Place + "'";
+			temp = "null,'" + NodeID + "','" + MeterID + "','" + Place + "','"+ IP + "'";
 
 			stat.executeUpdate("insert into NodePlace values (" + temp + ")");
 			// System.out.println(Util.getCurrentTime()+"insert into NodePlace
@@ -662,22 +667,34 @@ public class SqlOperate {
 		// commanddown_a("1", "1", "110000");
 		connect("jdbc:sqlite:topo3.db");
 		int i = 0;
-		long start = System.currentTimeMillis();
-		for (i = 0; i < 1000; i++) {
-			try {
-				CommandCache_full();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			// NodePlace_a("111","123","1234");
-			// ApplicationData_out(12,"2017-04-27*7:42:11");
-			// commanddown_a("111","1234567890","1234567");
-			// ApplicationData_a("111","2017-04-27 7:42:11","1111");
+		FileOutputStream fs = null;
+		try {
+			fs = new FileOutputStream(new File("text.txt"));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		close();
+		PrintStream p = new PrintStream(fs);
+		long start = System.currentTimeMillis();
+		for (i = 0; i < 100; i++) {
+//			try {
+//				CommandCache_full();
+//			} catch (SQLException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+			// NodePlace_a("111","123","1234");
+			//ApplicationData_out(12,"2017-04-27*7:42:11");
+			// commanddown_a("111","1234567890","1234567");
+			ApplicationData_a("111","2017-04-27 7:42:11","1111");
+			
+		}
 		long end = System.currentTimeMillis();
 		long time = end - start;
 		System.out.println(time);
+		
+		close();
+		
+		
 	}
 }
