@@ -103,16 +103,18 @@ public class test {
     } 
 	public static void main(String[] args) throws IOException {
 		//change();
-		long epoch = System.currentTimeMillis()/1000;
-		System.out.println(epoch);
-		//byte[] BBB = intToByteArray(256);
-		byte[] BBB = longToBytes(epoch);
-		for (int i = 0;i<BBB.length;i++){
-			System.out.println(BBB[i]);
-		}
-	    String stri = "0001";
-	    int j = Integer.parseInt(stri);
-	    System.out.println("j"+j);
+//		long epoch = System.currentTimeMillis()/1000;
+//		System.out.println(epoch);
+//		//byte[] BBB = intToByteArray(256);
+//		byte[] BBB = longToBytes(epoch);
+//		for (int i = 0;i<BBB.length;i++){
+//			System.out.println(BBB[i]);
+//		}
+//	    String stri = "0001";
+//	    int j = Integer.parseInt(stri);
+//	    System.out.println("j"+j);
+	    int com_type = 0x80;
+	    System.out.println(Integer.toHexString(com_type));
 		//byte[] command = new byte[10];
 //		command[0] = 0;
 //		command[1] = 1;

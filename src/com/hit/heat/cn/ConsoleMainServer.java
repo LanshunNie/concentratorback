@@ -2009,12 +2009,60 @@ public class ConsoleMainServer {
 //			}
 			com_content = new String(com);
 			//System.out.println("!!!" + com_content);
-			if (com_type == 0x01) {
-			commands = "{\"type\": \"mcast\", \"pama_data\": \""+com_content+"\"}";
-			//{"type": "mcast", "pama_data": "8005105BFE5916"}
-			System.out.println(Util.getCurrentTime()+" "+commands);
+			if (com_type == 0x00||com_type == 0x01||com_type == 0x80||com_type == 0x82) {
+				commands = "{\"type\": \"mcast\", \"pama_data\": \""+Integer.toHexString(com_type)+com_content+"\"}";
+				//{"type": "mcast", "pama_data": "8005105BFE5916"}
+				System.out.println(Util.getCurrentTime()+" "+commands);
 			}
+			else if(com_type == 0xc0||com_type == 0xc1){
+				commands = "{\"addrList\": [], \"type\": \"mcast_ack\", \"pama_data\": \""+Integer.toHexString(com_type)+com_content+"\"}";
+			}
+			else if(com_type == 0x40||com_type == 0x41){
+				commands = "{\"type\": \"mcast_ack\", \"pama_data\": \""+Integer.toHexString(com_type)+com_content+"\"}";
+			}
+			else if(com_type == 0xc1){
+				commands = "{\"type\": \"mcast\", \"pama_data\": \""+com_content+"\"}";
+			}
+			else if(com_type == 0xc2){
+				//String com_content = new String(com);
+				 String[] sourceStr = com_content.split(",");
+				 int addnum = sourceStr.length;
+				 commands = "{\"type\": \"pama_syn\", \"pama_data\": {\"hour\": \""+sourceStr[0]
+				 +"\", \"level\": "+sourceStr[1]+", \"seqNum\": "+sourceStr[2]
+				+", \"period\": \""+sourceStr[3]+", \"bitmap\": ["+sourceStr[4]
+				+"], \"second\": \""+sourceStr[5]+"\", \"state\": "+sourceStr[5]
+				+", \"minute\": \""+sourceStr[6]+"\"}}";
+			}
+			
 			//String c
+		}
+		else{
+			String com_content = new String(com);
+			 String[] sourceStr = com_content.split(",");
+			 int addnum = sourceStr.length;
+			 //String adds = "\"addrList\": [";
+			 String adds = "[";
+			 for(int i = 0;i<addnum-3;i++){ 
+				 adds +="\""+sourceStr[i]+"\", ";  
+			 }
+			 adds="["+adds+"\""+sourceStr[addnum-2]+"\"]";
+			 if (com_type == 0x00||com_type == 0x01||com_type == 0x80||com_type == 0x82) {
+				 
+				 commands = "{\"addrList\": "+adds+", \"type\": \"mcast\", \"pama_data\": \""+Integer.toHexString(com_type)+sourceStr[addnum-1]+"\"}";
+					//{"type": "mcast", "pama_data": "8005105BFE5916"}
+				System.out.println(Util.getCurrentTime()+" "+commands);
+				}
+			else if(com_type == 0xc0||com_type == 0xc1){
+					commands = "{\"addrList\": "+adds+", \"type\": \"mcast_ack\", \"pama_data\": \""+Integer.toHexString(com_type)+sourceStr[addnum-1]+"\"}";
+					//commands = "{\"addrList\": [], \"type\": \"mcast_ack\", \"pama_data\": \""+Integer.toHexString(com_type)+com_content+"\"}";
+				}
+			else if(com_type == 0x40||com_type == 0x41){
+					commands = "{\"addrList\": "+adds+", \"type\": \"mcast_ack\", \"pama_data\": \""+Integer.toHexString(com_type)+sourceStr[addnum-1]+"\"}";
+					//commands = "{\"type\": \"mcast_ack\", \"pama_data\": \""+Integer.toHexString(com_type)+com_content+"\"}";
+				}
+			else if(com_type == 0xc1){
+					commands =  "{\"addrList\": "+adds+", \"type\": \"mcast\", \"pama_data\": \""+sourceStr[addnum-1]+"\"}";
+				}
 		}
 		
 		 SqlOperate.commandCache_a(commands);
