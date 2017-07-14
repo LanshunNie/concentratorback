@@ -171,7 +171,7 @@ public class ConsoleMainServer {
 	public ConsoleMainServer() {
 		SqlOperate.connect("jdbc:sqlite:topo3.db");
 		SqlOperate.close();
-		SqlOperate.CommandCache_get();
+		//SqlOperate.CommandCache_get();
 		try {
 			/***********************************************************/
 			int drop_length = 365;
@@ -1200,6 +1200,64 @@ public class ConsoleMainServer {
 						e.printStackTrace();
 					}
 					break;
+				case "debug":// broadcast schedule
+					try {
+						System.out.println(Util.getCurrentTime() + " command is debug schedule"
+								+ ((JSONObject) retObject).getString(("pama_data")));
+						sb.append("下发调度" + ((JSONObject) retObject).getString(("pama_data")));
+						JSONObject synJson = new JSONObject(((JSONObject) retObject).getString(("pama_data")));
+						// System.out.println("=====111====+++++++++++++++++++++++++");
+						// System.out.println(Util.getCurrentTime()+"ttttt"+(synJson.getString("bitmap")));
+						// Util.formatByteStrBitmapToBytes(synJson.getString("bitmap"));
+
+						// System.out.println("=========+++++++++++++++++++++++++");
+
+						synParameter.setBitmap(Util.formatByteStrBitmapToBytes(synJson.getString("bitmap")));
+						// System.out.println("1111111113");
+						synParameter.setBit(synJson.getString("bitmap"));
+						// System.out.println("1111111112");
+						synParameter.setFlag(true);
+						// System.out.println("1111111110");
+						Util.writeSynConfigParamToFile(synParameter, "GSynConfig.json");
+						TunSendToRootMessage(
+								packScheduleConfigData((Util.formatByteStrBitmapToBytes(synJson.getString("bitmap")))));
+
+						synStateFlag = true;
+						synJson = null;
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					break;
+				case "end_debug":// broadcast schedule
+					try {
+						System.out.println(Util.getCurrentTime() + " command is end debug schedule"
+								+ ((JSONObject) retObject).getString(("pama_data")));
+						sb.append("下发调度" + ((JSONObject) retObject).getString(("pama_data")));
+						JSONObject synJson = new JSONObject(((JSONObject) retObject).getString(("pama_data")));
+						// System.out.println("=====111====+++++++++++++++++++++++++");
+						// System.out.println(Util.getCurrentTime()+"ttttt"+(synJson.getString("bitmap")));
+						// Util.formatByteStrBitmapToBytes(synJson.getString("bitmap"));
+
+						// System.out.println("=========+++++++++++++++++++++++++");
+
+						synParameter.setBitmap(Util.formatByteStrBitmapToBytes(synJson.getString("bitmap")));
+						// System.out.println("1111111113");
+						synParameter.setBit(synJson.getString("bitmap"));
+						// System.out.println("1111111112");
+						synParameter.setFlag(true);
+						// System.out.println("1111111110");
+						Util.writeSynConfigParamToFile(synParameter, "GSynConfig.json");
+						TunSendToRootMessage(
+								packScheduleConfigData((Util.formatByteStrBitmapToBytes(synJson.getString("bitmap")))));
+
+						synStateFlag = true;
+						synJson = null;
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					break;
 				// for use
 				case "pama_corr":
 					try {
@@ -2009,27 +2067,36 @@ public class ConsoleMainServer {
 				commands = "{\"type\": \"mcast\", \"pama_data\": \"" + com_content + "\"}";
 			} else if (com_type == 0xc2) {
 				// String com_content = new String(com);
-				String[] sourceStr = com_content.split(",");
+				String[] sourceStr = com_content.split(":");
 				int addnum = sourceStr.length;
 				commands = "{\"type\": \"pama_syn\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
 						+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"period\": \""
 						+ sourceStr[3] + ", \"bitmap\": [" + sourceStr[4] + "], \"second\": \"" + sourceStr[5]
 						+ "\", \"state\": " + sourceStr[6] + ", \"minute\": \"" + sourceStr[7] + "\"}}";
 			} else if (com_type == 0x02) {
-				String[] sourceStr = com_content.split(",");
+				String[] sourceStr = com_content.split(":");
 				int addnum = sourceStr.length;
-				String DebugBitmap = "-1,-1,-1,-1,-1," + "-1,-1,-1,-1,-1," + "-1,-1,-1,-1,-1,-1,-1,-1";
-				commands = "{\"type\": \"schedule\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
-						+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"period\": \""
-						+ sourceStr[3] + ", \"bitmap\": [" + DebugBitmap + "], \"second\": \"" + sourceStr[4]
-						+ "\", \"state\": " + sourceStr[5] + ", \"minute\": \"" + sourceStr[6] + "\"}}";
-			} else if (com_type == 0x81 || com_type == 0x40) {
-				String[] sourceStr = com_content.split(",");
+				String DebugBitmap = "-1, -1, -1, -1, -1," + " -1, -1, -1, -1, -1," 
+				+ " -1, -1, -1, -1, -1, -1, -1, -1";
+				commands = "{\"type\": \"debug\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
+						+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] 
+						+ ", \"bitmap\": [" + DebugBitmap + "], \"second\": \"" + sourceStr[3]
+						+ "\", \"minute\": \"" + sourceStr[4] + "\"}}";
+			} else if (com_type == 0x42) {
+				System.out.println(com_content);
+				String[] sourceStr = com_content.split(":");
 				int addnum = sourceStr.length;
 				commands = "{\"type\": \"schedule\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
-						+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"period\": \""
-						+ sourceStr[3] + ", \"bitmap\": [" + sourceStr[4] + "], \"second\": \"" + sourceStr[5]
-						+ "\", \"state\": " + sourceStr[6] + ", \"minute\": \"" + sourceStr[7] + "\"}}";
+						+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] 
+						+ ", \"bitmap\": [" + sourceStr[3] + "], \"second\": \"" + sourceStr[4]
+						+ "\", \"minute\": \"" + sourceStr[5] + "\"}}";
+			}else if (com_type == 0x81) {
+				String[] sourceStr = com_content.split(":");
+				int addnum = sourceStr.length;
+				commands = "{\"type\": \"end_debug\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
+						+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] 
+								+ ", \"bitmap\": [" + sourceStr[3] + "], \"second\": \"" + sourceStr[4]
+						+ "\", \"minute\": \"" + sourceStr[5] + "\"}}";
 			}else{
 				System.out.println("error "+com_content);
 			}
@@ -2070,8 +2137,8 @@ public class ConsoleMainServer {
 	}
 	// upper command handler
 	public byte[] CommandHandler(byte[] command) {
-		// System.out.println(message);
-		// count = SqlOperate.ApplicationData_count();
+		
+//上位机指令解析
 		// System.out.println(command[0]+" "+command[1]+" "+command[2]+"
 		// "+command[3]+" "+command[4]+" end");
 		int command_length = command[0];
@@ -2102,18 +2169,25 @@ public class ConsoleMainServer {
 		for (int i = 0; i < command_length; i++) {
 			// System.out.println("!!!" + com[i]);
 		}
+//下发指令合成
 		String commands = "";
 		if (send_to_net == 1 || send_to_net == -1){
 			String com_content = new String(com);
 			commands = commandAssemble(broadcast,com_content,com_type);
 		}
-		SqlOperate.commandCache_a(commands);
+		try {
+			SqlOperate.commandCache_a(commands);
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		// String cacheCommand = Util.formatByteToByteStr(command);
 		// System.out.println("Command Handler:" + commands);// for log
 		// Net_Status_flag = 6;
 		System.out.println("Net_Status_flag now:" + Net_Status_flag);
 		// command = cacheCommand.;
 		// System.out.println(command[0]+" "+command[1]+" "+command[2]);// for
+//修改得到return_type的内容用于后面处理
 		if(com_type == 0x00){
 			return_type = 2;
 			
@@ -2135,7 +2209,12 @@ public class ConsoleMainServer {
 					if (com_type == 0x02) {
 						try {
 							send_return(has_return, commands, com);
-							SqlOperate.CommandCache_get();
+							try {
+								SqlOperate.CommandCache_get();
+							} catch (SQLException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
 							Timer timer = new Timer();
 							timer.schedule(new TimerTask() {
 								public void run() {
@@ -2164,7 +2243,12 @@ public class ConsoleMainServer {
 					} else {
 						try {
 							cache_wait(1, has_return, commands, com);
-							SqlOperate.CommandCache_get();
+							try {
+								SqlOperate.CommandCache_get();
+							} catch (SQLException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 							// CommandHandler(command);
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
@@ -2174,7 +2258,12 @@ public class ConsoleMainServer {
 				} else if (Net_Status_flag == 2) {
 					try {
 						cache_wait(1, has_return, commands, com);
-						SqlOperate.CommandCache_get();
+						try {
+							SqlOperate.CommandCache_get();
+						} catch (SQLException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 						// CommandHandler(command);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -2183,7 +2272,12 @@ public class ConsoleMainServer {
 				} else if (Net_Status_flag == 3) {
 					try {
 						cache_wait(1, has_return, commands, com);
-						SqlOperate.CommandCache_get();
+						try {
+							SqlOperate.CommandCache_get();
+						} catch (SQLException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 						// Net_Status_flag = 4;
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -2206,7 +2300,12 @@ public class ConsoleMainServer {
 								String message = "The net start debugging";
 								System.out.println("upper send command to net");
 								// Upper_messageHandler(commandss);
-								SqlOperate.CommandCache_get();
+								try {
+									SqlOperate.CommandCache_get();
+								} catch (SQLException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
 							}
 							// }, 3 * 1000);
 						}, 30 * 1000);
@@ -2219,7 +2318,12 @@ public class ConsoleMainServer {
 				} else if (Net_Status_flag == 5) {
 					try {
 						cache_wait(1, has_return, commands, com);
-						SqlOperate.CommandCache_get();
+						try {
+							SqlOperate.CommandCache_get();
+						} catch (SQLException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -2245,7 +2349,12 @@ public class ConsoleMainServer {
 									// TODO Auto-generated catch block
 									e.printStackTrace();
 								}
-								SqlOperate.CommandCache_get();
+								try {
+									SqlOperate.CommandCache_get();
+								} catch (SQLException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
 							}
 						}, 30 * 1000);
 						// }, 3 * 1000);
@@ -2264,11 +2373,21 @@ public class ConsoleMainServer {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-					SqlOperate.CommandCache_get();
+					try {
+						SqlOperate.CommandCache_get();
+					} catch (SQLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				} else {
 					try {
 						send_return(has_return, commands, com);
-						SqlOperate.CommandCache_get();
+						try {
+							SqlOperate.CommandCache_get();
+						} catch (SQLException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -2758,11 +2877,14 @@ public class ConsoleMainServer {
 	}
 
 	public static void main(String[] args) throws IOException {
-		new ConsoleMainServer();
+		//new ConsoleMainServer();
 		//commandAssemble(1,"c0",0x80);
 		//commandAssemble(1,"c0",0xc0);
 		//commandAssemble(1,"c0",0x40);
 		//commandAssemble(1,"c0",0xc1);
+		commandAssemble(1,"15:0:17:-128, -127:40:57",0x42);
+		commandAssemble(1,"15:0:17:-128, -127:40:57",0x81);
+		commandAssemble(1,"15:0:17:40:57",0x02);
 //		if (com_type == 0x00 || com_type == 0x01 || com_type == 0x80 || com_type == 0x82) {
 //			commands = "{\"type\": \"mcast\", \"pama_data\": \"" + Integer.toHexString(com_type) + com_content
 //					+ "\"}";
