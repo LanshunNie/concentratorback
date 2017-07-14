@@ -1784,7 +1784,7 @@ public class ConsoleMainServer {
 			// SqlOperate.commandCache_a(cacheCommand);
 			filename = Util.getCurrentTime() + "Net-return";
 			final String filename1 = filename;
-			SqlOperate.ApplicationData_count_out(count, filename);
+			SqlOperate.NetMonitor_count_out(count, filename);
 			// System.out.println("TunSendToRootMessage(com);");
 			System.out.println("upper command send to root");
 			Timer timer = new Timer();
@@ -1987,7 +1987,87 @@ public class ConsoleMainServer {
 
 		}
 	}
+	
+	public static String commandAssemble(int broadcast,String com_content,int com_type){
+		String commands = "";
+		System.out.println(com_type);
+		if (broadcast == 1) {
+			System.out.println(com_type); 
+			System.out.println(0x80);
+			if (com_type == 0x00 || com_type == 0x01 || com_type == 0x80 || com_type == 0x82) {
+				commands = "{\"type\": \"mcast\", \"pama_data\": \"" + Integer.toHexString(com_type) + com_content
+						+ "\"}";
+				// {"type": "mcast", "pama_data": "8005105BFE5916"}
+				System.out.println(Util.getCurrentTime() + " " + commands);
+			} else if (com_type == 0xc0 || com_type == 0xc1) {
+				commands = "{\"addrList\": [], \"type\": \"mcast_ack\", \"pama_data\": \""
+						+ Integer.toHexString(com_type) + com_content + "\"}";
+			} else if (com_type == 0x40 || com_type == 0x41) {
+				commands = "{\"type\": \"mcast_ack\", \"pama_data\": \"" + Integer.toHexString(com_type)
+						+ com_content + "\"}";
+			} else if (com_type == 0xc1) {
+				commands = "{\"type\": \"mcast\", \"pama_data\": \"" + com_content + "\"}";
+			} else if (com_type == 0xc2) {
+				// String com_content = new String(com);
+				String[] sourceStr = com_content.split(",");
+				int addnum = sourceStr.length;
+				commands = "{\"type\": \"pama_syn\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
+						+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"period\": \""
+						+ sourceStr[3] + ", \"bitmap\": [" + sourceStr[4] + "], \"second\": \"" + sourceStr[5]
+						+ "\", \"state\": " + sourceStr[6] + ", \"minute\": \"" + sourceStr[7] + "\"}}";
+			} else if (com_type == 0x02) {
+				String[] sourceStr = com_content.split(",");
+				int addnum = sourceStr.length;
+				String DebugBitmap = "-1,-1,-1,-1,-1," + "-1,-1,-1,-1,-1," + "-1,-1,-1,-1,-1,-1,-1,-1";
+				commands = "{\"type\": \"schedule\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
+						+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"period\": \""
+						+ sourceStr[3] + ", \"bitmap\": [" + DebugBitmap + "], \"second\": \"" + sourceStr[4]
+						+ "\", \"state\": " + sourceStr[5] + ", \"minute\": \"" + sourceStr[6] + "\"}}";
+			} else if (com_type == 0x81 || com_type == 0x40) {
+				String[] sourceStr = com_content.split(",");
+				int addnum = sourceStr.length;
+				commands = "{\"type\": \"schedule\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
+						+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"period\": \""
+						+ sourceStr[3] + ", \"bitmap\": [" + sourceStr[4] + "], \"second\": \"" + sourceStr[5]
+						+ "\", \"state\": " + sourceStr[6] + ", \"minute\": \"" + sourceStr[7] + "\"}}";
+			}else{
+				System.out.println("error "+com_content);
+			}
+		} else {
+			
+			String[] sourceStr = com_content.split(",");
+			int addnum = sourceStr.length;
+			// String adds = "\"addrList\": [";
+			String adds = "[";
+			for (int i = 0; i < addnum - 3; i++) {
+				adds += "\"" + sourceStr[i] + "\", ";
+			}
+			adds = "[" + adds + "\"" + sourceStr[addnum - 2] + "\"]";
+			if (com_type == 0x00 || com_type == 0x01 || com_type == 0x80 || com_type == 0x82) {
 
+				commands = "{\"addrList\": " + adds + ", \"type\": \"mcast\", \"pama_data\": \""
+						+ Integer.toHexString(com_type) + sourceStr[addnum - 1] + "\"}";
+				// {"type": "mcast", "pama_data": "8005105BFE5916"}
+				System.out.println(Util.getCurrentTime() + " " + commands);
+			} else if (com_type == 0xc0 || com_type == 0xc1) {
+				commands = "{\"addrList\": " + adds + ", \"type\": \"mcast_ack\", \"pama_data\": \""
+						+ Integer.toHexString(com_type) + sourceStr[addnum - 1] + "\"}";
+				// commands = "{\"addrList\": [], \"type\": \"mcast_ack\",
+				// \"pama_data\":
+				// \""+Integer.toHexString(com_type)+com_content+"\"}";
+			} else if (com_type == 0x40 || com_type == 0x41) {
+				commands = "{\"addrList\": " + adds + ", \"type\": \"mcast_ack\", \"pama_data\": \""
+						+ Integer.toHexString(com_type) + sourceStr[addnum - 1] + "\"}";
+				// commands = "{\"type\": \"mcast_ack\", \"pama_data\":
+				// \""+Integer.toHexString(com_type)+com_content+"\"}";
+			} else if (com_type == 0xc1) {
+				commands = "{\"addrList\": " + adds + ", \"type\": \"mcast\", \"pama_data\": \""
+						+ sourceStr[addnum - 1] + "\"}";
+			}
+		}
+		System.out.println(commands);
+		return commands;
+	}
 	// upper command handler
 	public byte[] CommandHandler(byte[] command) {
 		// System.out.println(message);
@@ -2012,7 +2092,7 @@ public class ConsoleMainServer {
 		// System.out.println("com_length = "+com_length);
 
 		// System.out.println("comlength = "+command.length);
-		byte com_type = command[4];
+		int com_type = command[4];
 		// int command_length = command[2];
 		byte[] com = new byte[com_length];
 
@@ -2024,86 +2104,8 @@ public class ConsoleMainServer {
 		}
 		String commands = "";
 		if (send_to_net == 1 || send_to_net == -1){
-			if (broadcast == 1) {
-				String com_content = "";
-				// for (int i = 0; i < com_length; i++) {
-				// System.out.println("inte
-				// "+com[i]+"!!"+Integer.toHexString(com[i]));
-				// com_content += Integer.toHexString(com[i]);
-				//
-				// }
-				 
-				// System.out.println("!!!" + com_content);
-				if (com_type == 0x00 || com_type == 0x01 || com_type == 0x80 || com_type == 0x82) {
-					commands = "{\"type\": \"mcast\", \"pama_data\": \"" + Integer.toHexString(com_type) + com_content
-							+ "\"}";
-					// {"type": "mcast", "pama_data": "8005105BFE5916"}
-					System.out.println(Util.getCurrentTime() + " " + commands);
-				} else if (com_type == 0xc0 || com_type == 0xc1) {
-					commands = "{\"addrList\": [], \"type\": \"mcast_ack\", \"pama_data\": \""
-							+ Integer.toHexString(com_type) + com_content + "\"}";
-				} else if (com_type == 0x40 || com_type == 0x41) {
-					commands = "{\"type\": \"mcast_ack\", \"pama_data\": \"" + Integer.toHexString(com_type)
-							+ com_content + "\"}";
-				} else if (com_type == 0xc1) {
-					commands = "{\"type\": \"mcast\", \"pama_data\": \"" + com_content + "\"}";
-				} else if (com_type == 0xc2) {
-					// String com_content = new String(com);
-					String[] sourceStr = com_content.split(",");
-					int addnum = sourceStr.length;
-					commands = "{\"type\": \"pama_syn\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
-							+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"period\": \""
-							+ sourceStr[3] + ", \"bitmap\": [" + sourceStr[4] + "], \"second\": \"" + sourceStr[5]
-							+ "\", \"state\": " + sourceStr[6] + ", \"minute\": \"" + sourceStr[7] + "\"}}";
-				} else if (com_type == 0x02) {
-					String[] sourceStr = com_content.split(",");
-					int addnum = sourceStr.length;
-					String DebugBitmap = "-1,-1,-1,-1,-1," + "-1,-1,-1,-1,-1," + "-1,-1,-1,-1,-1,-1,-1,-1";
-					commands = "{\"type\": \"schedule\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
-							+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"period\": \""
-							+ sourceStr[3] + ", \"bitmap\": [" + DebugBitmap + "], \"second\": \"" + sourceStr[4]
-							+ "\", \"state\": " + sourceStr[5] + ", \"minute\": \"" + sourceStr[6] + "\"}}";
-				} else if (com_type == 0x81 || com_type == 0x40) {
-					String[] sourceStr = com_content.split(",");
-					int addnum = sourceStr.length;
-					commands = "{\"type\": \"schedule\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
-							+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"period\": \""
-							+ sourceStr[3] + ", \"bitmap\": [" + sourceStr[4] + "], \"second\": \"" + sourceStr[5]
-							+ "\", \"state\": " + sourceStr[6] + ", \"minute\": \"" + sourceStr[7] + "\"}}";
-				}
-				// String c
-			} else {
-				String com_content = new String(com);
-				String[] sourceStr = com_content.split(",");
-				int addnum = sourceStr.length;
-				// String adds = "\"addrList\": [";
-				String adds = "[";
-				for (int i = 0; i < addnum - 3; i++) {
-					adds += "\"" + sourceStr[i] + "\", ";
-				}
-				adds = "[" + adds + "\"" + sourceStr[addnum - 2] + "\"]";
-				if (com_type == 0x00 || com_type == 0x01 || com_type == 0x80 || com_type == 0x82) {
-
-					commands = "{\"addrList\": " + adds + ", \"type\": \"mcast\", \"pama_data\": \""
-							+ Integer.toHexString(com_type) + sourceStr[addnum - 1] + "\"}";
-					// {"type": "mcast", "pama_data": "8005105BFE5916"}
-					System.out.println(Util.getCurrentTime() + " " + commands);
-				} else if (com_type == 0xc0 || com_type == 0xc1) {
-					commands = "{\"addrList\": " + adds + ", \"type\": \"mcast_ack\", \"pama_data\": \""
-							+ Integer.toHexString(com_type) + sourceStr[addnum - 1] + "\"}";
-					// commands = "{\"addrList\": [], \"type\": \"mcast_ack\",
-					// \"pama_data\":
-					// \""+Integer.toHexString(com_type)+com_content+"\"}";
-				} else if (com_type == 0x40 || com_type == 0x41) {
-					commands = "{\"addrList\": " + adds + ", \"type\": \"mcast_ack\", \"pama_data\": \""
-							+ Integer.toHexString(com_type) + sourceStr[addnum - 1] + "\"}";
-					// commands = "{\"type\": \"mcast_ack\", \"pama_data\":
-					// \""+Integer.toHexString(com_type)+com_content+"\"}";
-				} else if (com_type == 0xc1) {
-					commands = "{\"addrList\": " + adds + ", \"type\": \"mcast\", \"pama_data\": \""
-							+ sourceStr[addnum - 1] + "\"}";
-				}
-			}
+			String com_content = new String(com);
+			commands = commandAssemble(broadcast,com_content,com_type);
 		}
 		SqlOperate.commandCache_a(commands);
 		// String cacheCommand = Util.formatByteToByteStr(command);
@@ -2112,7 +2114,13 @@ public class ConsoleMainServer {
 		System.out.println("Net_Status_flag now:" + Net_Status_flag);
 		// command = cacheCommand.;
 		// System.out.println(command[0]+" "+command[1]+" "+command[2]);// for
-
+		if(com_type == 0x00){
+			return_type = 2;
+			
+		}
+		else if(com_type == 0x01){
+			has_return =1;
+		}
 		if (send_to_net == 1 || send_to_net == -1) {
 			if (Net_Status_flag != 6) {
 				// byte[] bitmap = new
@@ -2645,14 +2653,17 @@ public class ConsoleMainServer {
 				// case GlobalDefines.GlobalCmd.G_DEF_READ_DATA:// multicast
 				case GlobalDefines.GlobalCmd.G_DEF_READ_DATA:// multicast
 					// add data to applicationdata table
-					System.out.println(Util.getCurrentTime() + " Appdata:" + nodesIP[nodesIP.length - 1]);
+					System.out.println(Util.getCurrentTime() + " Appdata:" + nodesIP[nodesIP.length - 1]
+							+"|"+ Util.formatBytesToStr(message));
 					SqlOperate.ApplicationData_a(nodesIP[nodesIP.length - 1], Util.getCurrentTime(),
-							Util.formatByteToByteStr(message));
+							Util.formatBytesToStr(message));
+							//Util.formatByteToByteStr(message));
 					break;
 				case GlobalDefines.GlobalCmd.G_DEF_CTL_ACK_READ_DATA:// multicast
 					// add data to applicationdata table
 					SqlOperate.ApplicationData_a(nodesIP[nodesIP.length - 1], Util.getCurrentTime(),
-							Util.formatByteToByteStr(message));
+							Util.formatBytesToStr(message));
+							//Util.formatByteToByteStr(message));
 					if (remoteClient.remoteHostIsOnline()) {
 						try {
 							remoteClient.asyncWriteAndFlush(formatDataToJsonStr("app", addr, "1"));
@@ -2748,12 +2759,56 @@ public class ConsoleMainServer {
 
 	public static void main(String[] args) throws IOException {
 		new ConsoleMainServer();
+		//commandAssemble(1,"c0",0x80);
+		//commandAssemble(1,"c0",0xc0);
+		//commandAssemble(1,"c0",0x40);
+		//commandAssemble(1,"c0",0xc1);
+//		if (com_type == 0x00 || com_type == 0x01 || com_type == 0x80 || com_type == 0x82) {
+//			commands = "{\"type\": \"mcast\", \"pama_data\": \"" + Integer.toHexString(com_type) + com_content
+//					+ "\"}";
+//			// {"type": "mcast", "pama_data": "8005105BFE5916"}
+//			System.out.println(Util.getCurrentTime() + " " + commands);
+//		} else if (com_type == 0xc0 || com_type == 0xc1) {
+//			commands = "{\"addrList\": [], \"type\": \"mcast_ack\", \"pama_data\": \""
+//					+ Integer.toHexString(com_type) + com_content + "\"}";
+//		} else if (com_type == 0x40 || com_type == 0x41) {
+//			commands = "{\"type\": \"mcast_ack\", \"pama_data\": \"" + Integer.toHexString(com_type)
+//					+ com_content + "\"}";
+//		} else if (com_type == 0xc1) {
+//			commands = "{\"type\": \"mcast\", \"pama_data\": \"" + com_content + "\"}";
+//		} else if (com_type == 0xc2) {
+//			// String com_content = new String(com);
+//			String[] sourceStr = com_content.split(",");
+//			int addnum = sourceStr.length;
+//			commands = "{\"type\": \"pama_syn\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
+//					+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"period\": \""
+//					+ sourceStr[3] + ", \"bitmap\": [" + sourceStr[4] + "], \"second\": \"" + sourceStr[5]
+//					+ "\", \"state\": " + sourceStr[6] + ", \"minute\": \"" + sourceStr[7] + "\"}}";
+//		} else if (com_type == 0x02) {
+//			String[] sourceStr = com_content.split(",");
+//			int addnum = sourceStr.length;
+//			String DebugBitmap = "-1,-1,-1,-1,-1," + "-1,-1,-1,-1,-1," + "-1,-1,-1,-1,-1,-1,-1,-1";
+//			commands = "{\"type\": \"schedule\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
+//					+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"period\": \""
+//					+ sourceStr[3] + ", \"bitmap\": [" + DebugBitmap + "], \"second\": \"" + sourceStr[4]
+//					+ "\", \"state\": " + sourceStr[5] + ", \"minute\": \"" + sourceStr[6] + "\"}}";
+//		} else if (com_type == 0x81 || com_type == 0x40) {
+//			String[] sourceStr = com_content.split(",");
+//			int addnum = sourceStr.length;
+//			commands = "{\"type\": \"schedule\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
+//					+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"period\": \""
+//					+ sourceStr[3] + ", \"bitmap\": [" + sourceStr[4] + "], \"second\": \"" + sourceStr[5]
+//					+ "\", \"state\": " + sourceStr[6] + ", \"minute\": \"" + sourceStr[7] + "\"}}";
+//		}else{
+//			System.out.println("error "+com_content);
+//		}
 		// ConsoleMainServer main =
 		// SqlOperate.connect("jdbc:sqlite:/root/build_jar/topo3.db");
 		// SqlOperate.connect("jdbc:sqlite:topo3.db");
 		// System.out.println("123");
 		// sendProcessLog();
 		// "2017-03-26 19:58:49"
+		
 		// sendProcessLog();
 		// byte[] open = new byte[21];
 		//

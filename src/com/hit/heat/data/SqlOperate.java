@@ -18,7 +18,6 @@ import com.hit.heat.util.rdc_EF_Control;
 import com.sun.xml.internal.ws.util.xml.CDATA;
 import com.hit.heat.util.WriteDataToFile;
 
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -289,6 +288,7 @@ public class SqlOperate {
 
 	// 添加数据到应用数据表
 	public static void ApplicationData_a(String NodeID, String currenttime, String data) {
+		connect("jdbc:sqlite:topo3.db");
 		String temp = null;
 		temp = "null,'" + NodeID + "','" + Util.getCurrentTime() + "','" + data + "'";
 
@@ -296,9 +296,11 @@ public class SqlOperate {
 			stat.executeUpdate("insert into ApplicationData values(" + temp + ")");
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
+			close();
 			e.printStackTrace();
 		}
-		//p.println(temp);
+		close();
+		// p.println(temp);
 		// System.out.println(Util.getCurrentTime()+"append to
 		// ApplicationData success"+"append values:"+temp);//for log
 		// System.out.println(Util.getCurrentTime()+" app:"+NodeID);//for
@@ -362,7 +364,7 @@ public class SqlOperate {
 			cal.setTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(Currenttime));
 			time1 = cal.getTimeInMillis();
 			AppFile = new WriteDataToFile(filename);
-			//System.out.println(filename + "-App.txt");
+			// System.out.println(filename + "-App.txt");
 			begintime = time1 - (day_length * 24) * (1000 * 3600);
 			String duration = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(begintime)) + "~"
 					+ new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(time1));
@@ -378,7 +380,7 @@ public class SqlOperate {
 			Date d = new Date(begintime);
 			String begint = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d);
 			String com = "SELECT * FROM ApplicationData where currenttime >= '" + begint + "'";
-			//System.out.println(com);
+			// System.out.println(com);
 			rs = stat.executeQuery(com);
 			while (rs.next()) {
 				String A_ID = rs.getString("ID");
@@ -415,7 +417,7 @@ public class SqlOperate {
 			time1 = cal.getTimeInMillis();
 
 			// System.out.println(filename+"-App.txt");
-			int delete_length = 1;// 配置为参数
+			int delete_length = 365;// 配置为参数
 			begintime = time1 - (delete_length * 24) * (1000 * 3600);
 			// String duration=new SimpleDateFormat("yyyy-MM-dd
 			// HH:mm:ss").format(new Date(begintime))+"~"+new
@@ -465,7 +467,7 @@ public class SqlOperate {
 			String temp = null;
 			temp = "null,'" + NodeID + "','" + Place + "','" + Message + "'";
 			// System.out.println("commanddown append values:"+temp);//for log
-			
+
 			stat.executeUpdate("insert into CommandDown values (" + temp + ")");
 			// System.out.println("insert into CommandDown success");//for log
 		} catch (SQLException e) {
@@ -508,25 +510,41 @@ public class SqlOperate {
 
 	// 缓存数据表判满 //测试通过
 	public static boolean CommandCache_full() throws SQLException {
-		int count = CommandCache_count();
-		//System.out.println(Util.getCurrentTime() + " CommandCache_count=" + count);
+
+		ResultSet rset = stat.executeQuery("select * from CommandCache");
+		// rset.last();
+		int count = 0;
+		String com = null;
+		while (rset.next()) {
+			com = rset.getString("Command");
+			count += 1;
+		}
+		// System.out.println(Util.getCurrentTime() + " CommandCache_count=" +
+		// count);
 		if (count < 1) {
-			//System.out.println("the commandCache is not full");
-			return true;
-		} else {
-			//System.out.println("the commandCache is full");
+			// System.out.println("the commandCache is not full");
 			return false;
+		} else {
+			// System.out.println("the commandCache is full");
+			return true;
 		}
 	}
 
 	// 缓存数据表判空 //测试通过
 	public static boolean CommandCache_empty() throws SQLException {
-		int count = CommandCache_count();
+		ResultSet rset = stat.executeQuery("select * from CommandCache");
+		// rset.last();
+		int count = 0;
+		String com = null;
+		while (rset.next()) {
+			com = rset.getString("Command");
+			count += 1;
+		}
 		if (count == 0) {
-			//System.out.println("the commandCache is empty");
+			// System.out.println("the commandCache is empty");
 			return true;
 		} else {
-			//System.out.println("the commandCache is not empty");
+			// System.out.println("the commandCache is not empty");
 			return false;
 		}
 	}
@@ -547,14 +565,21 @@ public class SqlOperate {
 	}
 
 	// 添加数据到指令缓存表 //测试通过
-	public static boolean commandCache_a(String Message) {
+	public static boolean commandCache_a(String Message) throws SQLException {
 		connect("jdbc:sqlite:topo3.db");
+		ResultSet rset = stat.executeQuery("select * from CommandCache");
+		// rset.last();
+		int count = 0;
+		String com = null;
+		while (rset.next()) {
+			com = rset.getString("Command");
+			count += 1;
+		}
 		try {
-			if (CommandCache_full()) {
+			if (count < 1) {
 				String temp = "null,'" + Message + "'";
-				///System.out.println(temp);//for log
-				close();
-				connect("jdbc:sqlite:topo3.db");
+				/// System.out.println(temp);//for log
+
 				stat.executeUpdate("insert into CommandCache values (" + temp + ");");
 				System.out.println(Util.getCurrentTime() + " insert into CommandCache:" + temp);// for
 				return true; // log
@@ -572,20 +597,28 @@ public class SqlOperate {
 	}
 
 	// 读取缓存指令 //测试通过
-	public static String CommandCache_get() {
+	public static String CommandCache_get() throws SQLException {
 		connect("jdbc:sqlite:topo3.db");
 		ResultSet rs;
 		int first = 0;
 		String Command = null;
+		ResultSet rset = stat.executeQuery("select * from CommandCache");
+		// rset.last();
+		int count = 0;
+		String com = null;
+		while (rset.next()) {
+			com = rset.getString("Command");
+			count += 1;
+		}
 		try {
-			if (CommandCache_count() != 0) {
+			if (count != 0) {
 				close();
 				connect("jdbc:sqlite:topo3.db");
 				rs = stat.executeQuery("SELECT * FROM CommandCache");
 				if (rs.next()) {
 					first = rs.getInt("ID");
 					Command = rs.getString("Command");
-					//System.out.println("" + first + ":" + Command);
+					// System.out.println("" + first + ":" + Command);
 				}
 				rs.close();
 				stat.executeUpdate("delete from CommandCache");
@@ -604,11 +637,11 @@ public class SqlOperate {
 	}
 
 	// 添加数据到节点位置表
-	public static void NodePlace_a(String NodeID, String MeterID, String Place,String IP) {
+	public static void NodePlace_a(String NodeID, String MeterID, String Place, String IP) {
 		connect("jdbc:sqlite:topo3.db");
 		try {
 			String temp = null;
-			temp = "null,'" + NodeID + "','" + MeterID + "','" + Place + "','"+ IP + "'";
+			temp = "null,'" + NodeID + "','" + MeterID + "','" + Place + "','" + IP + "'";
 
 			stat.executeUpdate("insert into NodePlace values (" + temp + ")");
 			// System.out.println(Util.getCurrentTime()+"insert into NodePlace
@@ -677,24 +710,23 @@ public class SqlOperate {
 		PrintStream p = new PrintStream(fs);
 		long start = System.currentTimeMillis();
 		for (i = 0; i < 100; i++) {
-//			try {
-//				CommandCache_full();
-//			} catch (SQLException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
+			// try {
+			// CommandCache_full();
+			// } catch (SQLException e) {
+			// // TODO Auto-generated catch block
+			// e.printStackTrace();
+			// }
 			// NodePlace_a("111","123","1234");
-			//ApplicationData_out(12,"2017-04-27*7:42:11");
+			// ApplicationData_out(12,"2017-04-27*7:42:11");
 			// commanddown_a("111","1234567890","1234567");
-			ApplicationData_a("111","2017-04-27 7:42:11","1111");
-			
+			ApplicationData_a("111", "2017-04-27 7:42:11", "1111");
+
 		}
 		long end = System.currentTimeMillis();
 		long time = end - start;
 		System.out.println(time);
-		
+
 		close();
-		
-		
+
 	}
 }
