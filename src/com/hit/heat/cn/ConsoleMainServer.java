@@ -1,6 +1,7 @@
 package com.hit.heat.cn;
 
 import java.io.BufferedReader;
+import java.io.File;
 
 //import java.io.BufferedReader;
 
@@ -20,6 +21,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -30,6 +32,7 @@ import org.jfree.chart.axis.NumberTickUnit;
 //import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.ls.LSException;
 
 //import com.hit.heat.control.FTPMain;
 import com.hit.heat.control.GlobalDefines;
@@ -158,6 +161,7 @@ public class ConsoleMainServer {
 	Timer Appdrop = new Timer();
 	Timer Netdrop = new Timer();
 	Timer topoTimer = new Timer();
+	Timer GPRSTimer = new Timer();
 
 	private Map<String, String> IpidMap;
 	private Map<Integer, String> topoMap = new HashMap<Integer, String>();
@@ -171,7 +175,7 @@ public class ConsoleMainServer {
 	public ConsoleMainServer() {
 		SqlOperate.connect("jdbc:sqlite:topo3.db");
 		SqlOperate.close();
-		//SqlOperate.CommandCache_get();
+		// SqlOperate.CommandCache_get();
 		try {
 			/***********************************************************/
 			int drop_length = 365;
@@ -313,6 +317,34 @@ public class ConsoleMainServer {
 					}
 				}
 			}, 0, 1000 * currect_rate * 60);
+
+//			GPRSTimer.schedule(new TimerTask() {
+//				public void run() {
+//					Process process = null;
+//					List<String> processList = new ArrayList<String>();
+//					try {
+//						process = Runtime.getRuntime().exec("ping -c 3 baidu.com");
+//						BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
+//						String line = "";
+//						while ((line = input.readLine()) != null) {
+//							processList.add(line);
+//						}
+//						input.close();
+//					} catch (IOException e) {
+//						e.printStackTrace();
+//					}
+//					int t = 0;
+//					for (String line : processList) {
+//						System.out.println(line);
+//						System.out.println(t);
+//						t += 1;
+//					}
+//					if (t < 7) {
+//						String[] params = {};
+//						python("GPRSOnline.py", params);
+//					}
+//				}
+//			}, 0, 1000 * 300);
 
 			// timing report application data
 			// APPTimer.schedule(new TimerTask() {
@@ -533,6 +565,36 @@ public class ConsoleMainServer {
 
 	// ×××××××
 	// report heart beat
+	public String python(String pythonPath, String[] params) {
+		File file = new File(pythonPath);
+		if (!file.exists()) {
+			return "python脚本不存在！";
+		}
+
+		String[] command = Arrays.copyOf(new String[] { "python", pythonPath }, params.length + 2);
+		System.arraycopy(params, 0, command, 2, params.length);
+
+		List<String> res = new ArrayList<>();
+		try {
+			Process process = Runtime.getRuntime().exec(command, null, null);
+			process.waitFor();
+
+			Scanner scanner = new Scanner(process.getInputStream());
+			while (scanner.hasNextLine()) {
+				String line = scanner.nextLine();
+				System.out.println(line);
+				res.add(line);
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		return "success";
+	}
+
 	public void heartbeat() {
 		// System.out.println("start consentrator heartbeat");// for log
 		// System.out.println("start heart beat:" + parameter.getupperAddr() +
@@ -2045,12 +2107,12 @@ public class ConsoleMainServer {
 
 		}
 	}
-	
-	public static String commandAssemble(int broadcast,String com_content,int com_type){
+
+	public static String commandAssemble(int broadcast, String com_content, int com_type) {
 		String commands = "";
 		System.out.println(com_type);
 		if (broadcast == 1) {
-			System.out.println(com_type); 
+			System.out.println(com_type);
 			System.out.println(0x80);
 			if (com_type == 0x00 || com_type == 0x01 || com_type == 0x80 || com_type == 0x82) {
 				commands = "{\"type\": \"mcast\", \"pama_data\": \"" + Integer.toHexString(com_type) + com_content
@@ -2061,47 +2123,43 @@ public class ConsoleMainServer {
 				commands = "{\"addrList\": [], \"type\": \"mcast_ack\", \"pama_data\": \""
 						+ Integer.toHexString(com_type) + com_content + "\"}";
 			} else if (com_type == 0x40 || com_type == 0x41) {
-				commands = "{\"type\": \"mcast_ack\", \"pama_data\": \"" + Integer.toHexString(com_type)
-						+ com_content + "\"}";
+				commands = "{\"type\": \"mcast_ack\", \"pama_data\": \"" + Integer.toHexString(com_type) + com_content
+						+ "\"}";
 			} else if (com_type == 0xc1) {
 				commands = "{\"type\": \"mcast\", \"pama_data\": \"" + com_content + "\"}";
 			} else if (com_type == 0xc2) {
 				// String com_content = new String(com);
 				String[] sourceStr = com_content.split(":");
 				int addnum = sourceStr.length;
-				commands = "{\"type\": \"pama_syn\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
-						+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"period\": \""
-						+ sourceStr[3] + ", \"bitmap\": [" + sourceStr[4] + "], \"second\": \"" + sourceStr[5]
-						+ "\", \"state\": " + sourceStr[6] + ", \"minute\": \"" + sourceStr[7] + "\"}}";
+				commands = "{\"type\": \"pama_syn\", \"pama_data\": {\"hour\": \"" + sourceStr[0] + "\", \"level\": "
+						+ sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"period\": \"" + sourceStr[3]
+						+ ", \"bitmap\": [" + sourceStr[4] + "], \"second\": \"" + sourceStr[5] + "\", \"state\": "
+						+ sourceStr[6] + ", \"minute\": \"" + sourceStr[7] + "\"}}";
 			} else if (com_type == 0x02) {
 				String[] sourceStr = com_content.split(":");
 				int addnum = sourceStr.length;
-				String DebugBitmap = "-1, -1, -1, -1, -1," + " -1, -1, -1, -1, -1," 
-				+ " -1, -1, -1, -1, -1, -1, -1, -1";
-				commands = "{\"type\": \"debug\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
-						+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] 
-						+ ", \"bitmap\": [" + DebugBitmap + "], \"second\": \"" + sourceStr[3]
-						+ "\", \"minute\": \"" + sourceStr[4] + "\"}}";
+				String DebugBitmap = "-1, -1, -1, -1, -1," + " -1, -1, -1, -1, -1," + " -1, -1, -1, -1, -1, -1, -1, -1";
+				commands = "{\"type\": \"debug\", \"pama_data\": {\"hour\": \"" + sourceStr[0] + "\", \"level\": "
+						+ sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"bitmap\": [" + DebugBitmap
+						+ "], \"second\": \"" + sourceStr[3] + "\", \"minute\": \"" + sourceStr[4] + "\"}}";
 			} else if (com_type == 0x42) {
 				System.out.println(com_content);
 				String[] sourceStr = com_content.split(":");
 				int addnum = sourceStr.length;
-				commands = "{\"type\": \"schedule\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
-						+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] 
-						+ ", \"bitmap\": [" + sourceStr[3] + "], \"second\": \"" + sourceStr[4]
-						+ "\", \"minute\": \"" + sourceStr[5] + "\"}}";
-			}else if (com_type == 0x81) {
+				commands = "{\"type\": \"schedule\", \"pama_data\": {\"hour\": \"" + sourceStr[0] + "\", \"level\": "
+						+ sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"bitmap\": [" + sourceStr[3]
+						+ "], \"second\": \"" + sourceStr[4] + "\", \"minute\": \"" + sourceStr[5] + "\"}}";
+			} else if (com_type == 0x81) {
 				String[] sourceStr = com_content.split(":");
 				int addnum = sourceStr.length;
-				commands = "{\"type\": \"end_debug\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
-						+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] 
-								+ ", \"bitmap\": [" + sourceStr[3] + "], \"second\": \"" + sourceStr[4]
-						+ "\", \"minute\": \"" + sourceStr[5] + "\"}}";
-			}else{
-				System.out.println("error "+com_content);
+				commands = "{\"type\": \"end_debug\", \"pama_data\": {\"hour\": \"" + sourceStr[0] + "\", \"level\": "
+						+ sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"bitmap\": [" + sourceStr[3]
+						+ "], \"second\": \"" + sourceStr[4] + "\", \"minute\": \"" + sourceStr[5] + "\"}}";
+			} else {
+				System.out.println("error " + com_content);
 			}
 		} else {
-			
+
 			String[] sourceStr = com_content.split(",");
 			int addnum = sourceStr.length;
 			// String adds = "\"addrList\": [";
@@ -2128,17 +2186,18 @@ public class ConsoleMainServer {
 				// commands = "{\"type\": \"mcast_ack\", \"pama_data\":
 				// \""+Integer.toHexString(com_type)+com_content+"\"}";
 			} else if (com_type == 0xc1) {
-				commands = "{\"addrList\": " + adds + ", \"type\": \"mcast\", \"pama_data\": \""
-						+ sourceStr[addnum - 1] + "\"}";
+				commands = "{\"addrList\": " + adds + ", \"type\": \"mcast\", \"pama_data\": \"" + sourceStr[addnum - 1]
+						+ "\"}";
 			}
 		}
 		System.out.println(commands);
 		return commands;
 	}
+
 	// upper command handler
 	public byte[] CommandHandler(byte[] command) {
-		
-//上位机指令解析
+
+		// 上位机指令解析
 		// System.out.println(command[0]+" "+command[1]+" "+command[2]+"
 		// "+command[3]+" "+command[4]+" end");
 		int command_length = command[0];
@@ -2169,11 +2228,11 @@ public class ConsoleMainServer {
 		for (int i = 0; i < command_length; i++) {
 			// System.out.println("!!!" + com[i]);
 		}
-//下发指令合成
+		// 下发指令合成
 		String commands = "";
-		if (send_to_net == 1 || send_to_net == -1){
+		if (send_to_net == 1 || send_to_net == -1) {
 			String com_content = new String(com);
-			commands = commandAssemble(broadcast,com_content,com_type);
+			commands = commandAssemble(broadcast, com_content, com_type);
 		}
 		try {
 			SqlOperate.commandCache_a(commands);
@@ -2187,13 +2246,12 @@ public class ConsoleMainServer {
 		System.out.println("Net_Status_flag now:" + Net_Status_flag);
 		// command = cacheCommand.;
 		// System.out.println(command[0]+" "+command[1]+" "+command[2]);// for
-//修改得到return_type的内容用于后面处理
-		if(com_type == 0x00){
+		// 修改得到return_type的内容用于后面处理
+		if (com_type == 0x00) {
 			return_type = 2;
-			
-		}
-		else if(com_type == 0x01){
-			has_return =1;
+
+		} else if (com_type == 0x01) {
+			has_return = 1;
 		}
 		if (send_to_net == 1 || send_to_net == -1) {
 			if (Net_Status_flag != 6) {
@@ -2395,79 +2453,67 @@ public class ConsoleMainServer {
 				}
 			}
 		} else {
-			if(com_type == 0x00){
-				//修改心跳间
+			if (com_type == 0x00) {
+				// 修改心跳间
 				String com_content = new String(com);
 				int heartIntSec = Integer.valueOf(com_content);
-				//String[] sourceStr = com_content.split(",");
+				// String[] sourceStr = com_content.split(",");
 				parameter.setHeartIntSec(heartIntSec);
-			}
-			else if(com_type == 0x01){
+			} else if (com_type == 0x01) {
 				String com_content = new String(com);
 				int day_length = Integer.valueOf(com_content);
 				sendApplicationData(day_length);
-				//获取最新上报的应用数据 
-			}
-			else if(com_type == 0x02){
-				//获取最新网络监测数据
+				// 获取最新上报的应用数据
+			} else if (com_type == 0x02) {
+				// 获取最新网络监测数据
 				String com_content = new String(com);
 				int day_length = Integer.valueOf(com_content);
 				sendApplicationData(day_length);
-			}
-			else if(com_type == 0x03){
-				//获取集中器进程运行状态 supervisorctl status
+			} else if (com_type == 0x03) {
+				// 获取集中器进程运行状态 supervisorctl status
 				try {
 					getSupervisorStatus();
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			}
-			else if(com_type == 0x04){
-				//获取supervisor运行日志
+			} else if (com_type == 0x04) {
+				// 获取supervisor运行日志
 				sendProcessLog("var/log/hit_log/supervisord.log");
-			}
-			else if(com_type == 0x05){
-				//获取集中器后台进程运行日志
+			} else if (com_type == 0x05) {
+				// 获取集中器后台进程运行日志
 				sendProcessLog("var/log/hit_log/concentratorback.stderr.log");
 				sendProcessLog("var/log/hit_log/concentratorback.stdout.log");
-			}
-			else if(com_type == 0x06){
-				//获取集中器前台运行日志  
+			} else if (com_type == 0x06) {
+				// 获取集中器前台运行日志
 				sendProcessLog("var/log/hit_log/gunicorn.stderr.log");
 				sendProcessLog("var/log/hit_log/gunicorn.stdout.log");
-			}
-			else if(com_type == 0x07){
-		        //获取tunslip运行日志
+			} else if (com_type == 0x07) {
+				// 获取tunslip运行日志
 				sendProcessLog("var/log/hit_log/tunslip6.stderr.log");
 				sendProcessLog("var/log/hit_log/tunslip6.stdout.log");
-			}
-			else if(com_type == 0x08){
-		        //获取ppp运行日志
+			} else if (com_type == 0x08) {
+				// 获取ppp运行日志
 				sendProcessLog("var/log/hit_log/ppp-connect-errors");
-			}
-			else if(com_type == 0x09){
-				//获取集中器指令下发记录 
+			} else if (com_type == 0x09) {
+				// 获取集中器指令下发记录
 				sendCommandBefore();
-			}
-			else if(com_type == 0x0A){
-		        //重启集中器
+			} else if (com_type == 0x0A) {
+				// 重启集中器
 				try {
 					restartConcentrator();
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			}
-			else if(com_type == 0x0B){
+			} else if (com_type == 0x0B) {
 				String com_content = new String(com);
 				String[] sourceStr = com_content.split(",");
 				parameter.setftpuser(sourceStr[0]);
 				parameter.setftpPwd(sourceStr[1]);
-		        //修改ftp配置项目 用户名密码
-			}
-			else if(com_type == 0x0C){
-		        //重启集中器后台进程
+				// 修改ftp配置项目 用户名密码
+			} else if (com_type == 0x0C) {
+				// 重启集中器后台进程
 				try {
 					concentratorBackRestart();
 				} catch (IOException e) {
@@ -2475,19 +2521,18 @@ public class ConsoleMainServer {
 					e.printStackTrace();
 				}
 			}
-			
-			else if(com_type == 0x0D){
-				//重启tunslip
+
+			else if (com_type == 0x0D) {
+				// 重启tunslip
 				try {
 					tunslip6Restart();
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			}
-			else if(com_type == 0x0E){
-			    //重启边界路由器节点
-			}else{
+			} else if (com_type == 0x0E) {
+				// 重启边界路由器节点
+			} else {
 				System.out.println("send to centor error");
 			}
 			if (commands == "16") {//
@@ -2495,10 +2540,10 @@ public class ConsoleMainServer {
 				getConcentratorID();
 			} else if (commands == "17") {//
 				// System.out.println("sendApplicationData(command);");
-				//sendApplicationData(command);
+				// sendApplicationData(command);
 			} else if (commands == "18") {//
 				// System.out.println("sendProcessLog();");
-				//sendProcessLog(String logName)
+				// sendProcessLog(String logName)
 			} else if (commands == "19") {//
 				// System.out.println("getProcessState();");
 				try {
@@ -2592,8 +2637,9 @@ public class ConsoleMainServer {
 	// send history application data
 	public byte[] sendApplicationData(int day_length) {
 
-		//int day_length = (command[1] << 8 | command[2]);
-		System.out.println(Util.getCurrentTime() + " Send appdata to Remote server(" + day_length + "):");// for log
+		// int day_length = (command[1] << 8 | command[2]);
+		System.out.println(Util.getCurrentTime() + " Send appdata to Remote server(" + day_length + "):");// for
+																											// log
 		try {
 			String AppuploadFile = new SimpleDateFormat("yyyy-MM-dd#HH:mm:ss").format(new Date()) + "-App.txt";
 			AppuploadFile = parameter.getId() + "-" + AppuploadFile;
@@ -2611,11 +2657,12 @@ public class ConsoleMainServer {
 		}
 		return null;
 	}
-	
+
 	public byte[] sendNetMonitorData(int day_length) {
 
-		//int day_length = (command[1] << 8 | command[2]);
-		System.out.println(Util.getCurrentTime() + " Send appdata to Remote server(" + day_length + "):");// for log
+		// int day_length = (command[1] << 8 | command[2]);
+		System.out.println(Util.getCurrentTime() + " Send appdata to Remote server(" + day_length + "):");// for
+																											// log
 		try {
 			String netUploadFile = new SimpleDateFormat("yyyy-MM-dd#HH:mm:ss").format(new Date()) + "-Net.txt";
 			netUploadFile = parameter.getId() + "-" + netUploadFile;
@@ -2633,13 +2680,16 @@ public class ConsoleMainServer {
 		}
 		return null;
 	}
+
 	// send Process Log test over
 	public byte[] sendProcessLog(String logName) {
 		// org.apache.log4j.BasicConfigurator.configure();
 		try {
 			WriteFTPFile write = new WriteFTPFile();
 			String UploadFile = logName;
-			System.out.println("send Process Log filename:" + UploadFile);// for														// log
+			System.out.println("send Process Log filename:" + UploadFile);// for
+																			// //
+																			// log
 			write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
 					UploadFile);
 		} catch (Exception e) {
@@ -2681,7 +2731,7 @@ public class ConsoleMainServer {
 			err.close();
 		}
 	}
-	
+
 	public void getSupervisorStatus() throws IOException {
 		String command1 = "supervisorctl status";
 		Process commandProcess = Runtime.getRuntime().exec(command1);
@@ -2698,7 +2748,7 @@ public class ConsoleMainServer {
 			err.close();
 		}
 	}
-	
+
 	public void concentratorBackRestart() throws IOException {
 		String command1 = "supervisorctl restart concentratorBack";
 		Process commandProcess = Runtime.getRuntime().exec(command1);
@@ -2708,14 +2758,14 @@ public class ConsoleMainServer {
 		try {
 			while ((line = input.readLine()) != null) {
 				System.out.println(line);
-				//SendToupperMessage(line.getBytes());
+				// SendToupperMessage(line.getBytes());
 			}
 			input.close();
 		} catch (IOException e) {
 			err.close();
 		}
 	}
-	
+
 	public void supervisorRestart() throws IOException {
 		String command1 = "supervisorctl restart all";
 		Process commandProcess = Runtime.getRuntime().exec(command1);
@@ -2725,13 +2775,14 @@ public class ConsoleMainServer {
 		try {
 			while ((line = input.readLine()) != null) {
 				System.out.println(line);
-				//SendToupperMessage(line.getBytes());
+				// SendToupperMessage(line.getBytes());
 			}
 			input.close();
 		} catch (IOException e) {
 			err.close();
 		}
 	}
+
 	public void tunslip6Restart() throws IOException {
 		String command1 = "supervisorctl restart tunslip6";
 		Process commandProcess = Runtime.getRuntime().exec(command1);
@@ -2741,13 +2792,14 @@ public class ConsoleMainServer {
 		try {
 			while ((line = input.readLine()) != null) {
 				System.out.println(line);
-				//SendToupperMessage(line.getBytes());
+				// SendToupperMessage(line.getBytes());
 			}
 			input.close();
 		} catch (IOException e) {
 			err.close();
 		}
 	}
+
 	public void sent_message(String addr, byte[] message) {
 		// System.out.println("nodes final:");
 		// String notes = Util.getCurrentTime() + ":[" + addr + "]" + "report
@@ -2772,17 +2824,17 @@ public class ConsoleMainServer {
 				// case GlobalDefines.GlobalCmd.G_DEF_READ_DATA:// multicast
 				case GlobalDefines.GlobalCmd.G_DEF_READ_DATA:// multicast
 					// add data to applicationdata table
-					System.out.println(Util.getCurrentTime() + " Appdata:" + nodesIP[nodesIP.length - 1]
-							+"|"+ Util.formatBytesToStr(message));
+					System.out.println(Util.getCurrentTime() + " Appdata:" + nodesIP[nodesIP.length - 1] + "|"
+							+ Util.formatByteToByteStr(message));
 					SqlOperate.ApplicationData_a(nodesIP[nodesIP.length - 1], Util.getCurrentTime(),
-							Util.formatBytesToStr(message));
-							//Util.formatByteToByteStr(message));
+							//Util.formatBytesToStr(message));
+					Util.formatByteToByteStr(message));
 					break;
 				case GlobalDefines.GlobalCmd.G_DEF_CTL_ACK_READ_DATA:// multicast
 					// add data to applicationdata table
 					SqlOperate.ApplicationData_a(nodesIP[nodesIP.length - 1], Util.getCurrentTime(),
-							Util.formatBytesToStr(message));
-							//Util.formatByteToByteStr(message));
+							//Util.formatBytesToStr(message));
+					Util.formatByteToByteStr(message));
 					if (remoteClient.remoteHostIsOnline()) {
 						try {
 							remoteClient.asyncWriteAndFlush(formatDataToJsonStr("app", addr, "1"));
@@ -2877,60 +2929,78 @@ public class ConsoleMainServer {
 	}
 
 	public static void main(String[] args) throws IOException {
-		//new ConsoleMainServer();
-		//commandAssemble(1,"c0",0x80);
-		//commandAssemble(1,"c0",0xc0);
-		//commandAssemble(1,"c0",0x40);
-		//commandAssemble(1,"c0",0xc1);
-		commandAssemble(1,"15:0:17:-128, -127:40:57",0x42);
-		commandAssemble(1,"15:0:17:-128, -127:40:57",0x81);
-		commandAssemble(1,"15:0:17:40:57",0x02);
-//		if (com_type == 0x00 || com_type == 0x01 || com_type == 0x80 || com_type == 0x82) {
-//			commands = "{\"type\": \"mcast\", \"pama_data\": \"" + Integer.toHexString(com_type) + com_content
-//					+ "\"}";
-//			// {"type": "mcast", "pama_data": "8005105BFE5916"}
-//			System.out.println(Util.getCurrentTime() + " " + commands);
-//		} else if (com_type == 0xc0 || com_type == 0xc1) {
-//			commands = "{\"addrList\": [], \"type\": \"mcast_ack\", \"pama_data\": \""
-//					+ Integer.toHexString(com_type) + com_content + "\"}";
-//		} else if (com_type == 0x40 || com_type == 0x41) {
-//			commands = "{\"type\": \"mcast_ack\", \"pama_data\": \"" + Integer.toHexString(com_type)
-//					+ com_content + "\"}";
-//		} else if (com_type == 0xc1) {
-//			commands = "{\"type\": \"mcast\", \"pama_data\": \"" + com_content + "\"}";
-//		} else if (com_type == 0xc2) {
-//			// String com_content = new String(com);
-//			String[] sourceStr = com_content.split(",");
-//			int addnum = sourceStr.length;
-//			commands = "{\"type\": \"pama_syn\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
-//					+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"period\": \""
-//					+ sourceStr[3] + ", \"bitmap\": [" + sourceStr[4] + "], \"second\": \"" + sourceStr[5]
-//					+ "\", \"state\": " + sourceStr[6] + ", \"minute\": \"" + sourceStr[7] + "\"}}";
-//		} else if (com_type == 0x02) {
-//			String[] sourceStr = com_content.split(",");
-//			int addnum = sourceStr.length;
-//			String DebugBitmap = "-1,-1,-1,-1,-1," + "-1,-1,-1,-1,-1," + "-1,-1,-1,-1,-1,-1,-1,-1";
-//			commands = "{\"type\": \"schedule\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
-//					+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"period\": \""
-//					+ sourceStr[3] + ", \"bitmap\": [" + DebugBitmap + "], \"second\": \"" + sourceStr[4]
-//					+ "\", \"state\": " + sourceStr[5] + ", \"minute\": \"" + sourceStr[6] + "\"}}";
-//		} else if (com_type == 0x81 || com_type == 0x40) {
-//			String[] sourceStr = com_content.split(",");
-//			int addnum = sourceStr.length;
-//			commands = "{\"type\": \"schedule\", \"pama_data\": {\"hour\": \"" + sourceStr[0]
-//					+ "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"period\": \""
-//					+ sourceStr[3] + ", \"bitmap\": [" + sourceStr[4] + "], \"second\": \"" + sourceStr[5]
-//					+ "\", \"state\": " + sourceStr[6] + ", \"minute\": \"" + sourceStr[7] + "\"}}";
-//		}else{
-//			System.out.println("error "+com_content);
-//		}
+		new ConsoleMainServer();
+		// commandAssemble(1,"c0",0x80);
+		// commandAssemble(1,"c0",0xc0);
+		// commandAssemble(1,"c0",0x40);
+		// commandAssemble(1,"c0",0xc1);
+		// commandAssemble(1,"15:0:17:-128, -127:40:57",0x42);
+		// commandAssemble(1,"15:0:17:-128, -127:40:57",0x81);
+		// commandAssemble(1,"15:0:17:40:57",0x02);
+		// if (com_type == 0x00 || com_type == 0x01 || com_type == 0x80 ||
+		// com_type == 0x82) {
+		// commands = "{\"type\": \"mcast\", \"pama_data\": \"" +
+		// Integer.toHexString(com_type) + com_content
+		// + "\"}";
+		// // {"type": "mcast", "pama_data": "8005105BFE5916"}
+		// System.out.println(Util.getCurrentTime() + " " + commands);
+		// } else if (com_type == 0xc0 || com_type == 0xc1) {
+		// commands = "{\"addrList\": [], \"type\": \"mcast_ack\",
+		// \"pama_data\": \""
+		// + Integer.toHexString(com_type) + com_content + "\"}";
+		// } else if (com_type == 0x40 || com_type == 0x41) {
+		// commands = "{\"type\": \"mcast_ack\", \"pama_data\": \"" +
+		// Integer.toHexString(com_type)
+		// + com_content + "\"}";
+		// } else if (com_type == 0xc1) {
+		// commands = "{\"type\": \"mcast\", \"pama_data\": \"" + com_content +
+		// "\"}";
+		// } else if (com_type == 0xc2) {
+		// // String com_content = new String(com);
+		// String[] sourceStr = com_content.split(",");
+		// int addnum = sourceStr.length;
+		// commands = "{\"type\": \"pama_syn\", \"pama_data\": {\"hour\": \"" +
+		// sourceStr[0]
+		// + "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2]
+		// + ", \"period\": \""
+		// + sourceStr[3] + ", \"bitmap\": [" + sourceStr[4] + "], \"second\":
+		// \"" + sourceStr[5]
+		// + "\", \"state\": " + sourceStr[6] + ", \"minute\": \"" +
+		// sourceStr[7] + "\"}}";
+		// } else if (com_type == 0x02) {
+		// String[] sourceStr = com_content.split(",");
+		// int addnum = sourceStr.length;
+		// String DebugBitmap = "-1,-1,-1,-1,-1," + "-1,-1,-1,-1,-1," +
+		// "-1,-1,-1,-1,-1,-1,-1,-1";
+		// commands = "{\"type\": \"schedule\", \"pama_data\": {\"hour\": \"" +
+		// sourceStr[0]
+		// + "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2]
+		// + ", \"period\": \""
+		// + sourceStr[3] + ", \"bitmap\": [" + DebugBitmap + "], \"second\":
+		// \"" + sourceStr[4]
+		// + "\", \"state\": " + sourceStr[5] + ", \"minute\": \"" +
+		// sourceStr[6] + "\"}}";
+		// } else if (com_type == 0x81 || com_type == 0x40) {
+		// String[] sourceStr = com_content.split(",");
+		// int addnum = sourceStr.length;
+		// commands = "{\"type\": \"schedule\", \"pama_data\": {\"hour\": \"" +
+		// sourceStr[0]
+		// + "\", \"level\": " + sourceStr[1] + ", \"seqNum\": " + sourceStr[2]
+		// + ", \"period\": \""
+		// + sourceStr[3] + ", \"bitmap\": [" + sourceStr[4] + "], \"second\":
+		// \"" + sourceStr[5]
+		// + "\", \"state\": " + sourceStr[6] + ", \"minute\": \"" +
+		// sourceStr[7] + "\"}}";
+		// }else{
+		// System.out.println("error "+com_content);
+		// }
 		// ConsoleMainServer main =
 		// SqlOperate.connect("jdbc:sqlite:/root/build_jar/topo3.db");
 		// SqlOperate.connect("jdbc:sqlite:topo3.db");
 		// System.out.println("123");
 		// sendProcessLog();
 		// "2017-03-26 19:58:49"
-		
+
 		// sendProcessLog();
 		// byte[] open = new byte[21];
 		//

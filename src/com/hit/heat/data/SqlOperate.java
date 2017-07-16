@@ -510,7 +510,7 @@ public class SqlOperate {
 
 	// 缓存数据表判满 //测试通过
 	public static boolean CommandCache_full() throws SQLException {
-
+		connect("jdbc:sqlite:topo3.db");
 		ResultSet rset = stat.executeQuery("select * from CommandCache");
 		// rset.last();
 		int count = 0;
@@ -523,15 +523,18 @@ public class SqlOperate {
 		// count);
 		if (count < 1) {
 			// System.out.println("the commandCache is not full");
+			close();
 			return false;
 		} else {
 			// System.out.println("the commandCache is full");
+			close();
 			return true;
 		}
 	}
 
 	// 缓存数据表判空 //测试通过
 	public static boolean CommandCache_empty() throws SQLException {
+		connect("jdbc:sqlite:topo3.db");
 		ResultSet rset = stat.executeQuery("select * from CommandCache");
 		// rset.last();
 		int count = 0;
@@ -542,9 +545,11 @@ public class SqlOperate {
 		}
 		if (count == 0) {
 			// System.out.println("the commandCache is empty");
+			close();
 			return true;
 		} else {
 			// System.out.println("the commandCache is not empty");
+			close();
 			return false;
 		}
 	}
