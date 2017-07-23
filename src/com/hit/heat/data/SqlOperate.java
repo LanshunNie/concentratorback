@@ -617,8 +617,6 @@ public class SqlOperate {
 		}
 		try {
 			if (count != 0) {
-				close();
-				connect("jdbc:sqlite:topo3.db");
 				rs = stat.executeQuery("SELECT * FROM CommandCache");
 				if (rs.next()) {
 					first = rs.getInt("ID");

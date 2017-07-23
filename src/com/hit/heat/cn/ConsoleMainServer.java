@@ -747,6 +747,7 @@ public class ConsoleMainServer {
 
 	// Send To Root Syn Message
 	public void SendToRootSynMsg(byte[] message) throws IOException {
+		System.out.println(message.length);
 		if (nioSynConfigServer == null) {
 			throw new IOException();
 		}
@@ -947,7 +948,13 @@ public class ConsoleMainServer {
 						} else if (buffer[2] == (byte) 0xC0) {
 							System.out.println(Util.getCurrentTime() + " command is command loading");
 							sb.append("multicast节点重启command");
-						} else {
+						} else if (buffer[2] == (byte) 0xC3) {
+							System.out.println(Util.getCurrentTime() + " command is node wakeup ");
+							sb.append("multicast节点唤醒command");
+						}else if (buffer[2] == (byte) 0xC4) {
+							System.out.println(Util.getCurrentTime() + " command is check node");
+							sb.append("multicast节点查询command");
+						}else {
 							System.out.println(Util.getCurrentTime() + " wrong~~");
 						}
 
@@ -1198,6 +1205,12 @@ public class ConsoleMainServer {
 					} else if (buffer[2] == (byte) 0xC0) {
 						System.out.println(Util.getCurrentTime() + " command is command loading");
 						sb.append("multicast节点重启command");
+					}else if (buffer[2] == (byte) 0xC3) {
+						System.out.println(Util.getCurrentTime() + " command is node wakeup ");
+						sb.append("multicast节点唤醒command");
+					}else if (buffer[2] == (byte) 0xC4) {
+						System.out.println(Util.getCurrentTime() + " command is check node");
+						sb.append("multicast节点查询command");
 					} else {
 						System.out.println(Util.getCurrentTime() + " wrong~~");
 					}
@@ -1749,8 +1762,8 @@ public class ConsoleMainServer {
 		byte[] bit = new byte[144];
 		// byte[] bitmap = new byte[] { -1, -128, 35, 84, 72, -128, 61, -2, 16,
 		// 2, 4, 68, 90, 48, 0, 0, 8, 10 };
-		// byte[] bitmap = synParameter.getBitmap();
-		byte[] bitmap = new byte[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+		byte[] bitmap = synParameter.getBitmap();
+		//byte[] bitmap = new byte[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
 		int i, j, t = 0;
 		byte bitmap_a = 0;
@@ -1894,7 +1907,7 @@ public class ConsoleMainServer {
 
 		} else if (has_return == 2) {
 
-			// Upper_messageHandler(cacheCommand);
+			Upper_messageHandler(cacheCommand);
 			try {
 				count = SqlOperate.ApplicationData_count();
 			} catch (SQLException e) {
@@ -1932,11 +1945,11 @@ public class ConsoleMainServer {
 					filename);
 		} else {
 			System.out.println("upper command send to root");
-			// Upper_messageHandler(cacheCommand);
+			Upper_messageHandler(cacheCommand);
 		}
 	}
 
-	public void cache_wait(int cache, int has_return, String cacheCommand, byte[] com) throws IOException {
+	public void cache_wait(int com_type, int cache, int has_return, String cacheCommand, byte[] com) throws IOException {
 		// System.out.println("cache:" + cache + " has return:" + has_return + "
 		// cacheCommand:" + cacheCommand);
 		// System.out.println(" cacheCommand:" + cacheCommand);
@@ -2045,7 +2058,7 @@ public class ConsoleMainServer {
 			}
 		} else {
 			if (cache == 1) {
-				if ("ffffffff".equals(cacheCommand)) {// debug command
+				if (com_type == 0x02) {// debug command
 					bit = getbit();
 					if (getbit()[minute_count + 1] == 1) {
 						wait = (600 - (minutes * 60 + second)) + 330;
@@ -2197,7 +2210,7 @@ public class ConsoleMainServer {
 	// upper command handler
 	public byte[] CommandHandler(byte[] command) {
 
-		// 上位机指令解析
+// 上位机指令解析
 		// System.out.println(command[0]+" "+command[1]+" "+command[2]+"
 		// "+command[3]+" "+command[4]+" end");
 		int command_length = command[0];
@@ -2228,7 +2241,7 @@ public class ConsoleMainServer {
 		for (int i = 0; i < command_length; i++) {
 			// System.out.println("!!!" + com[i]);
 		}
-		// 下发指令合成
+// 下发指令合成
 		String commands = "";
 		if (send_to_net == 1 || send_to_net == -1) {
 			String com_content = new String(com);
@@ -2257,8 +2270,8 @@ public class ConsoleMainServer {
 			if (Net_Status_flag != 6) {
 				// byte[] bitmap = new
 				// byte[]{-1,-128,35,84,72,-128,61,-2,16,2,4,68,90,48,0,0,8,10};
-				byte[] bitmap = new byte[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
-				// byte[] bitmap = synParameter.getBitmap();
+				//byte[] bitmap = new byte[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+				byte[] bitmap = synParameter.getBitmap();
 				boolean flag = Util.Online_Judge(bitmap);
 				// boolean flag = Util.Online_Judge(synParameter.getBitmap());
 				Net_Status_flag = Util.StatusJuage(flag);
@@ -2276,11 +2289,8 @@ public class ConsoleMainServer {
 							Timer timer = new Timer();
 							timer.schedule(new TimerTask() {
 								public void run() {
-									// System.out.println("wait for going into
-									// debugging");
-									String message = "The net start debugging";
-
 									try {
+										String message = "The net start debugging";
 										SendToupperMessage(message.getBytes());
 									} catch (IOException e) {
 										// TODO Auto-generated catch block
@@ -2290,7 +2300,6 @@ public class ConsoleMainServer {
 								// }, 3 * 1000);
 							}, 30 * 1000);
 
-							// System.out.println("SendToupperMessage(message.getBytes())");
 							Net_Status_flag = 6;
 							// CommandHandler(command);
 							// status change to debugging，
@@ -2300,7 +2309,7 @@ public class ConsoleMainServer {
 						}
 					} else {
 						try {
-							cache_wait(1, has_return, commands, com);
+							cache_wait(com_type,1, has_return, commands, com);
 							try {
 								SqlOperate.CommandCache_get();
 							} catch (SQLException e) {
@@ -2315,7 +2324,7 @@ public class ConsoleMainServer {
 					}
 				} else if (Net_Status_flag == 2) {
 					try {
-						cache_wait(1, has_return, commands, com);
+						cache_wait(com_type,1, has_return, commands, com);
 						try {
 							SqlOperate.CommandCache_get();
 						} catch (SQLException e) {
@@ -2329,7 +2338,7 @@ public class ConsoleMainServer {
 					}
 				} else if (Net_Status_flag == 3) {
 					try {
-						cache_wait(1, has_return, commands, com);
+						cache_wait(com_type,1, has_return, commands, com);
 						try {
 							SqlOperate.CommandCache_get();
 						} catch (SQLException e) {
@@ -2375,7 +2384,7 @@ public class ConsoleMainServer {
 					}
 				} else if (Net_Status_flag == 5) {
 					try {
-						cache_wait(1, has_return, commands, com);
+						cache_wait(com_type,1, has_return, commands, com);
 						try {
 							SqlOperate.CommandCache_get();
 						} catch (SQLException e) {
@@ -2934,7 +2943,11 @@ public class ConsoleMainServer {
 		// commandAssemble(1,"c0",0xc0);
 		// commandAssemble(1,"c0",0x40);
 		// commandAssemble(1,"c0",0xc1);
-		// commandAssemble(1,"15:0:17:-128, -127:40:57",0x42);
+		
+		String aa = commandAssemble(1,"15:0:17:-128, -127:40:57",0x42);
+		//{"type": "pama_syn", "pama_data": {"hour": "21", "level": 0, "seqNum": 17, "period": "2", "bitmap": [-128, 0, 0, 0, 8, 0, 0, 0, 0, -128, 0, 0, 0, 8, 0, 0, 0, 0], "second": "59", "state": true, "minute": "10"}}
+
+		//Upper_messageHandler(aa);
 		// commandAssemble(1,"15:0:17:-128, -127:40:57",0x81);
 		// commandAssemble(1,"15:0:17:40:57",0x02);
 		// if (com_type == 0x00 || com_type == 0x01 || com_type == 0x80 ||
