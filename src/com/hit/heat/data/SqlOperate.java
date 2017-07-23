@@ -15,6 +15,7 @@ import org.w3c.dom.css.ElementCSSInlineStyle;
 import com.hit.heat.model.Energy;
 import com.hit.heat.util.Util;
 import com.hit.heat.util.rdc_EF_Control;
+import com.sun.xml.internal.ws.api.message.Attachment;
 import com.sun.xml.internal.ws.util.xml.CDATA;
 import com.hit.heat.util.WriteDataToFile;
 
@@ -459,7 +460,26 @@ public class SqlOperate {
 		// System.out.println("close the database");
 		close();
 	}
-
+	//
+	public static void dataBaseOut(String begin)  {
+		connect("jdbc:sqlite:topo4.db");
+		//String com = "SELECT * FROM ApplicationData where currenttime >= '" + begin + "'";
+		try {
+			stat.executeUpdate("attach /home/fan/workplaces/workspace/ConsoleMainServerProgram/"
+				+"topo3.db as test");
+			//stat.executeUpdate("attach /root/concentratorback/topo3.db as test");
+			stat.executeUpdate("insert into NetMonitor select * from test.NetMonitor "
+				+"where currenttime >= '" + begin + "'");
+			stat.executeUpdate("insert into ApplicationData select * from test.ApplicationData "
+					+"where currenttime >= '" + begin + "'");
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		close();
+	}
+	
+	
 	// 添加数据到指令下发表 //测试通过
 	public static void commanddown_a(String NodeID, String Place, String Message) {
 		connect("jdbc:sqlite:topo3.db");

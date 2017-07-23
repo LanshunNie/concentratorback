@@ -2234,7 +2234,7 @@ public class ConsoleMainServer {
 		int com_type = command[4];
 		// int command_length = command[2];
 		byte[] com = new byte[com_length];
-
+		
 		System.arraycopy(command, 5, com, 0, com_length);
 		// System.out.println("com = "+com.toString());
 		int check_sum = command[5 + com_length];
@@ -2243,8 +2243,8 @@ public class ConsoleMainServer {
 		}
 // 下发指令合成
 		String commands = "";
+		String com_content = new String(com);
 		if (send_to_net == 1 || send_to_net == -1) {
-			String com_content = new String(com);
 			commands = commandAssemble(broadcast, com_content, com_type);
 		}
 		try {
@@ -2464,18 +2464,18 @@ public class ConsoleMainServer {
 		} else {
 			if (com_type == 0x00) {
 				// 修改心跳间
-				String com_content = new String(com);
+				//String com_content = new String(com);
 				int heartIntSec = Integer.valueOf(com_content);
 				// String[] sourceStr = com_content.split(",");
 				parameter.setHeartIntSec(heartIntSec);
 			} else if (com_type == 0x01) {
-				String com_content = new String(com);
+				//String com_content = new String(com);
 				int day_length = Integer.valueOf(com_content);
 				sendApplicationData(day_length);
 				// 获取最新上报的应用数据
 			} else if (com_type == 0x02) {
 				// 获取最新网络监测数据
-				String com_content = new String(com);
+				//String com_content = new String(com);
 				int day_length = Integer.valueOf(com_content);
 				sendApplicationData(day_length);
 			} else if (com_type == 0x03) {
@@ -2516,8 +2516,8 @@ public class ConsoleMainServer {
 					e.printStackTrace();
 				}
 			} else if (com_type == 0x0B) {
-				String com_content = new String(com);
-				String[] sourceStr = com_content.split(",");
+				//String com_content = new String(com);
+				String[] sourceStr = com_content.split("|");
 				parameter.setftpuser(sourceStr[0]);
 				parameter.setftpPwd(sourceStr[1]);
 				// 修改ftp配置项目 用户名密码
@@ -2541,47 +2541,31 @@ public class ConsoleMainServer {
 				}
 			} else if (com_type == 0x0E) {
 				// 重启边界路由器节点
-			} else {
+			} else if (com_type == 0x10) {
+				// 返回时间段的数据库
+				try {
+					sendDataBase_b(com_content);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}else {
 				System.out.println("send to centor error");
-			}
-			if (commands == "16") {//
-				// System.out.println("getConcentratorID();");
-				getConcentratorID();
-			} else if (commands == "17") {//
-				// System.out.println("sendApplicationData(command);");
-				// sendApplicationData(command);
-			} else if (commands == "18") {//
-				// System.out.println("sendProcessLog();");
-				// sendProcessLog(String logName)
-			} else if (commands == "19") {//
-				// System.out.println("getProcessState();");
-				try {
-					getProcessState();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			} else if (commands == "20") {
-				// System.out.println("sendtopoBefore(command);");
-				sendtopoBefore(command);
-			} else if (commands == "21") {
-				// System.out.println("sendCommandBefore();");
-				sendCommandBefore();
-			} else if (commands == "22") {
-				// System.out.println("restartConcentrator();");
-				try {
-					restartConcentrator();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			} else {// if***
-				System.out.println(commands);
-			}
+			} 
 		}
 		return null;
 	}
-
+	public void sendDataBase_b(String begin) throws IOException {
+		SqlOperate.dataBaseOut(begin);
+		WriteFTPFile write = new WriteFTPFile();
+		write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
+				"topo4.db");
+		String cmd = "rm topo4.db";
+		System.out.println(cmd);
+		Process commandProcess = Runtime.getRuntime().exec(cmd);
+		//final BufferedReader input = new BufferedReader(new InputStreamReader(commandProcess.getInputStream()));
+		//final BufferedReader err = new BufferedReader(new InputStreamReader(commandProcess.getErrorStream()));
+	}
 	// get process information ,test over
 	public byte[] getProcessState() throws IOException {
 		String cmd = "supervisorctl status";
