@@ -10,6 +10,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.hit.heat.model.SynParameter;
+import com.sun.jndi.url.iiopname.iiopnameURLContextFactory;
 
 
 /* @lhy Lhy
@@ -121,7 +122,21 @@ public class GSynConfig {
 		try {
 			bitmap =json.getString("bitmap");
 			if(!bitmap.isEmpty()){
-				synParameter.setBitmap(bitmap.getBytes());
+				System.out.println(bitmap);
+				String bitmap_temp = bitmap.substring(1,bitmap.length()-1);
+				System.out.println(bitmap_temp);
+				String[] Bits = bitmap_temp.split(",");
+				System.out.println(Bits.length);
+				String Bit = "";
+				byte[] Bitmap = new byte[18];
+				for (int i = 0;i<18;i++){
+					Bit = Bits[i];
+					int a = Integer.valueOf(Bit);
+					Bitmap[i] = (byte) (a & 0xFF);
+				}
+				//(byte) (a & 0xFF)
+				synParameter.setBitmap(Bitmap);
+				//synParameter.setBitmap(bitmap.getBytes());
 			}else{
 				synParameter.setBitmap("000000000000000000".getBytes());
 			}
