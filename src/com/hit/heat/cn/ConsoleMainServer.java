@@ -2199,21 +2199,21 @@ public class ConsoleMainServer {
 				int addnum = sourceStr.length;
 				String DebugBitmap = "-1, -1, -1, -1, -1," + " -1, -1, -1, -1, -1," + " -1, -1, -1, -1, -1, -1, -1, -1";
 				commands = "{\"type\": \"debug\", \"pama_data\": {\"hour\": \"" + sourceStr[0] + "\", \"level\": "
-						+ sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"bitmap\": [" + DebugBitmap
-						+ "], \"second\": \"" + sourceStr[3] + "\", \"minute\": \"" + sourceStr[4] + "\"}}";
+						+ sourceStr[3] + ", \"seqNum\": " + sourceStr[4] + ", \"bitmap\": [" + DebugBitmap
+						+ "], \"second\": \"" + sourceStr[2] + "\", \"minute\": \"" + sourceStr[1] + "\"}}";
 			} else if (comType.equals("42")) {
 				System.out.println(com_content);
 				String[] sourceStr = com_content.split(":");
 				int addnum = sourceStr.length;
 				commands = "{\"type\": \"schedule\", \"pama_data\": {\"hour\": \"" + sourceStr[0] + "\", \"level\": "
-						+ sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"bitmap\": [" + sourceStr[3]
-						+ "], \"second\": \"" + sourceStr[4] + "\", \"minute\": \"" + sourceStr[5] + "\"}}";
+						+ sourceStr[4] + ", \"seqNum\": " + sourceStr[5] + ", \"bitmap\": [" + sourceStr[3]
+						+ "], \"second\": \"" + sourceStr[2] + "\", \"minute\": \"" + sourceStr[1] + "\"}}";
 			} else if (comType.equals("81")) {
 				String[] sourceStr = com_content.split(":");
 				int addnum = sourceStr.length;
 				commands = "{\"type\": \"end_debug\", \"pama_data\": {\"hour\": \"" + sourceStr[0] + "\", \"level\": "
-						+ sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"bitmap\": [" + sourceStr[3]
-						+ "], \"second\": \"" + sourceStr[4] + "\", \"minute\": \"" + sourceStr[5] + "\"}}";
+						+ sourceStr[4] + ", \"seqNum\": " + sourceStr[5] + ", \"bitmap\": [" + sourceStr[3]
+						+ "], \"second\": \"" + sourceStr[2] + "\", \"minute\": \"" + sourceStr[1] + "\"}}";
 			} else {
 				System.out.println("error " + com_content);
 			}
