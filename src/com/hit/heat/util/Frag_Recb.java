@@ -37,7 +37,8 @@ public class Frag_Recb {
 			fragList.add(i, "");
 		}
 		this.setSeqnum(b[FRAG_SEQ_INDEX]);
-		timer.schedule(new timerTask(addr), 3* 1000);// 60*3* 1000
+		//timer.schedule(new timerTask(addr), 3* 1000);// 60*3* 1000
+		timer.schedule(new timerTask(addr), 60*3* 1000);// 60*3* 1000
 	}
 
 	private void insertFrag(String frag, int index) {
