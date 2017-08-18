@@ -560,7 +560,7 @@ public class ConsoleMainServer {
 		nioUdpServer.sendto(message, getSocketAddressByName(parameter.getRootAddr(), parameter.getRootPort()));// for
 																												// //
 																												// log
-		// System.out.println("Send To Root Message over");// for lag
+		System.out.println("Send To Root Message over");// for lag
 	}
 
 	// ×××××××
@@ -1726,7 +1726,7 @@ public class ConsoleMainServer {
 			// System.out.println("Upper Udp Message Handler message:" + s);//
 			// for
 			// System.out.println(addr+" "+ " "+ message.length + " "
-			// +message[0]);
+			// +message[0]);		
 			System.out.println("!!!!!!!!!!!!!!!!!!!");
 			System.out.println("0:"+message[0]+" 1:"+message[1]+" 2:"+message[2]
 					+" 3:"+message[3]+" 4:"+message[4] );
@@ -1734,18 +1734,26 @@ public class ConsoleMainServer {
 			System.arraycopy(message, 0, command, 0, message.length);
 			int command_length = command[0];
 			System.out.println("command_length = "+command_length);
+			
 			int command_flag = command[1];
 			System.out.println("command-Flag = "+command_flag);
+			
 			int send_to_net = command[2] >> 7;
 			System.out.println("send to net = "+send_to_net);
-			int return_type = (command[2] >> 6) & 0x01;
+			
+			int return_type = (command[2] >> 6) & 0x01;		
 			System.out.println("return_type = "+return_type);
-			int has_return = ((command[2] >> 4) & 0x03) >> 1;
-			System.out.println("has_return = "+has_return);
-			int broadcast = ((command[2] >> 4) & 0x03) & 0x01;
+			
+			
+			int broadcast = ((command[2] >> 4) & 0x03) >> 1;
 			System.out.println("broadcast = "+broadcast);
+			
+			int has_return = ((command[2] >> 4) & 0x03) & 0x01;
+			System.out.println("has_return = "+has_return);
+
 			int unicast_number = command[2] & 0x0F;
-			System.out.println("unicast = "+unicast_number);
+			System.out.println("unicast_count = "+unicast_number);
+			
 			int com_length = command[3];
 			System.out.println("com_length = "+com_length);
 			
@@ -1788,7 +1796,7 @@ public class ConsoleMainServer {
 			// System.out.println("command[0] = " + command[0]); // log
 			// byte[] command = Util.formatByteStrToByte(s);
 			// System.out.println("Start command handler");// for log
-			CommandHandler(message);
+			//CommandHandler(message);
 			// CommandHandler(command);
 			System.out.println(Util.getCurrentTime() + " command handle over");// for
 																				// log
@@ -2170,7 +2178,7 @@ public class ConsoleMainServer {
 	public static String commandAssemble(int broadcast, String com_content, String comType) {
 		String commands = "";
 		System.out.println(comType);
-		if (broadcast == 1) {
+		if (broadcast == 1 || broadcast == -1) {
 			System.out.println(comType);
 			//System.out.println(0x80);
 			if (comType.equals("00") || comType.equals("01") || 
@@ -2191,9 +2199,9 @@ public class ConsoleMainServer {
 				String[] sourceStr = com_content.split(":");
 				int addnum = sourceStr.length;
 				commands = "{\"type\": \"pama_syn\", \"pama_data\": {\"hour\": \"" + sourceStr[0] + "\", \"level\": "
-						+ sourceStr[1] + ", \"seqNum\": " + sourceStr[2] + ", \"period\": \"" + sourceStr[3]
-						+ ", \"bitmap\": [" + sourceStr[4] + "], \"second\": \"" + sourceStr[5] + "\", \"state\": "
-						+ sourceStr[6] + ", \"minute\": \"" + sourceStr[7] + "\"}}";
+						+ sourceStr[6] + ", \"seqNum\": " + sourceStr[7] + ", \"period\": \"" + sourceStr[4]
+						+ "\", \"bitmap\": [" + sourceStr[3] + "], \"second\": \"" + sourceStr[2] + "\", \"state\": "
+						+ sourceStr[5] + ", \"minute\": \"" + sourceStr[1] + "\"}}";
 			} else if (comType.equals("02")) {
 				String[] sourceStr = com_content.split(":");
 				int addnum = sourceStr.length;
@@ -2265,10 +2273,11 @@ public class ConsoleMainServer {
 		// System.out.println("send to net = "+send_to_net);
 		int return_type = (command[2] >> 6) & 0x01;
 		// System.out.println("return_type = "+return_type);
-		int has_return = ((command[2] >> 4) & 0x03) >> 1;
-		// System.out.println("has_return = "+has_return);
-		int broadcast = ((command[2] >> 4) & 0x03) & 0x01;
+		int broadcast = ((command[2] >> 4) & 0x03) >> 1;
 		// System.out.println("broadcast = "+broadcast);
+		int has_return = ((command[2] >> 4) & 0x03) & 0x01;
+		// System.out.println("has_return = "+has_return);
+		
 		int unicast_number = command[2] & 0x0F;
 		// System.out.println("unicast = "+unicast_number);
 		int com_length = command[3];
