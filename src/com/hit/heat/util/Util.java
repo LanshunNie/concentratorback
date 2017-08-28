@@ -500,6 +500,91 @@ public class Util {
 		}
 	}
 
+	
+	public static void writeConfigParamToFile(NetParameter parameter, String path) {
+
+		// System.out.println("000000000000000000");
+
+		JSONObject object = new JSONObject();
+		try {
+//			"id"
+			object.put("id", parameter.getId());
+//			"HeartIntSec"
+			object.put("HeartIntSec", parameter.getHeartIntSec());
+//			"AckHeartInt"
+			object.put("AckHeartInt", parameter.getAckHeartInt());
+//			"MaxAckFail"
+			object.put("MaxAckFail", parameter.getMaxAckFail());
+//			"tcpAddr"
+			object.put("tcpAddr", parameter.getTcpAddr());
+//			"tcpPort"
+			object.put("tcpPort", parameter.getTcpPort());
+//			"tcpByWebPort"
+			object.put("tcpByWebPort", parameter.getTcpByWebPort());
+//			"tcpRemoteConfigPort"
+			object.put("tcpRemoteConfigPort", parameter.getTcpRemoteConfigPort());
+//			"udpAddr"
+			object.put("udpAddr", parameter.getUdpAddr());
+//			"udpPort"
+			object.put("udpPort", parameter.getUdpPort());
+//			"rootAddr"
+			object.put("rootAddr", parameter.getRootAddr());
+//			"rootPort"
+			object.put("rootPort", parameter.getRootPort());
+//			"rootRoomId"
+			object.put("rootRoomId", parameter.getRootRoomId());
+//			"rootX"
+			object.put("rootX", parameter.getRootX());
+//			"rootY"
+			object.put("rootY", parameter.getRootY());
+//			"tcpWebServerAddr"
+			object.put("tcpWebServerAddr", parameter.getTcpWebServerAddr());
+//			"tcpWebServerPort"
+			object.put("tcpWebServerPort", parameter.getTcpWebServerPort());
+//			"remoteAddr"
+			object.put("remoteAddr", parameter.getRemoteAddr());
+//			"remotePort"
+			object.put("remotePort", parameter.getRemotePort());
+//			"netPort"
+			object.put("netPort", parameter.getNetPort());
+//			"dayLength"
+			object.put("dayLength", parameter.getdayLength());
+//			"appSendLength"
+			object.put("appSendLength", parameter.getappSendLength());
+//			"upperAddr"
+			object.put("upperAddr", parameter.getupperAddr());
+//			"upperPort"
+			object.put("upperPort", parameter.getupperPort());
+//			"ftpuser"     
+			object.put("ftpuser", parameter.getftpuser());
+//		    "ftphost"
+			object.put("ftphost", parameter.getftphost());
+//			"ftpPwd":"xiaoming",
+			object.put("ftpPwd", parameter.getftpPwd());
+//			"ftpPort":21,
+			object.put("ftpPort", parameter.getftpPort());
+//			"serverIp":"127.0.0.1"
+			object.put("serverIp", parameter.getserverIp());
+
+			try {
+				BufferedWriter bufferedWriter;
+				bufferedWriter = new BufferedWriter(new FileWriter(new File(path)));
+				bufferedWriter.write(object.toString());
+				bufferedWriter.flush();
+				bufferedWriter.close();
+				// System.out.println("aaaaaaaaaaaaaaaaaaaaaaa");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			// System.out.println("ffffffffffffffffff");
+		} catch (JSONException e) {
+			// TODO 自动生成的 catch 块
+			// System.out.println("bbbbbbbbbbbbbbbbbbbb");
+			e.printStackTrace();
+		}
+	}
 	public static Object parseMetaData(String message) throws JSONException {
 		if (message == null) {
 			return null;

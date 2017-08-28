@@ -465,8 +465,7 @@ public class SqlOperate {
 		connect("jdbc:sqlite:topo4.db");
 		//String com = "SELECT * FROM ApplicationData where currenttime >= '" + begin + "'";
 		try {
-			stat.executeUpdate("attach /home/fan/workplaces/workspace/ConsoleMainServerProgram/"
-				+"topo3.db as test");
+			stat.executeUpdate("attach database 'topo3.db' as 'test'");
 			//stat.executeUpdate("attach /root/concentratorback/topo3.db as test");
 			stat.executeUpdate("insert into NetMonitor select * from test.NetMonitor "
 				+"where currenttime >= '" + begin + "'");

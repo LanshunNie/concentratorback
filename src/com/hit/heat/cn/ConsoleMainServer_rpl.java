@@ -145,7 +145,7 @@ public class ConsoleMainServer_rpl {
 		catch (JSONException e) {
 			parameter = new NetParameter("00000001", 40, 3, 30, "0.0.0.0", 12300, 12301, 12306, "aaaa::1", 8765,
 					"aaaa:0:0:0:12:7400:1:13", 5678, "192.168.1.141", 12303, "192.168.1.141", 12304, 12307,2,3,
-					"0.0.0.0,",12400,"xiaoming","139.199.154.37","xiaoming",21);
+					"0.0.0.0,",12400,"xiaoming","139.199.154.37","xiaoming",21,"127.0.0.1");
 			synParameter = new SynParameter(0, 0, 0, 0, 0, 0, "0".getBytes(), false, null);
 			// TODO 自动生成的 catch 块
 			e.printStackTrace();

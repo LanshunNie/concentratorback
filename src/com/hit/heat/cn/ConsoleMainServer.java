@@ -7,6 +7,7 @@ import java.io.File;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 //import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -67,6 +68,7 @@ import com.hit.heat.util.rdc_EF_Control;
 //import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
 //import com.sun.org.apache.xml.internal.security.utils.Base64;
 import com.sun.corba.se.impl.activation.CommandHandler;
+import com.sun.jmx.snmp.tasks.Task;
 import com.sun.org.apache.xalan.internal.xsltc.runtime.Parameter;
 import com.sun.xml.internal.ws.resources.StreamingMessages;
 
@@ -96,7 +98,7 @@ public class ConsoleMainServer {
 	// private WriteDataToFile unicastDataFile;
 	// private WriteDataToFile offLineDataFile;
 	private WriteDataToFile FragFile;
-
+	ReschedulableTimerTask task;
 	private NettyClient nettyClient;// netty client
 	private NettyClient remoteClient;
 	private NettyClient configRemoteNettyClient;// config information
@@ -223,7 +225,7 @@ public class ConsoleMainServer {
 		} catch (JSONException e) {
 			parameter = new NetParameter("00000001", 40, 3, 30, "0.0.0.0", 12300, 12301, 12306, "aaaa::1", 8765,
 					"aaaa:0:0:0:12:7400:1:13", 5678, "192.168.1.141", 12303, "192.168.1.141", 12304, 12307, 2, 3,
-					"0.0.0.0", 12400, "xiaoming", "139.199.154.37", "xiaoming", 21);
+					"0.0.0.0", 12400, "xiaoming", "139.199.154.37", "xiaoming", 21,"127.0.0.1");
 			synParameter = new SynParameter(0, 0, 0, 0, 0, 0, "0".getBytes(), false, null);
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -524,11 +526,24 @@ public class ConsoleMainServer {
 		}
 		startUpperUdpServer();
 		// timing heart beat
-		HeartTimer.schedule(new TimerTask() {
-			public void run() {
-				heartbeat();
-			}
-		}, 0, 1000 * parameter.getHeartIntSec());
+//		HeartTimer.schedule(new TimerTask() {
+//			public void run() {
+//				heartbeat();
+//				System.out.println(parameter.getHeartIntSec());
+//			}
+//		}, 0, 1000 * parameter.getHeartIntSec());
+		
+		 task=new ReschedulableTimerTask() {  
+             @Override  
+             public void run() {  
+            	 heartbeat();
+ 				//System.out.println(parameter.getHeartIntSec());              
+             }  
+	     };  
+	     //Timer timer=new Timer();  
+	     HeartTimer.schedule(task, 0, 1000 * parameter.getHeartIntSec());//每两秒执行一次  
+	        
+
 		// }, 0, 1000 * parameter.getHeartIntSec() * 1);
 		// // timing command down
 		// CommandDownTimer.schedule(new TimerTask() {
@@ -1797,7 +1812,7 @@ public class ConsoleMainServer {
 			// byte[] command = Util.formatByteStrToByte(s);
 			// System.out.println("Start command handler");// for log
 			//CommandHandler(message);
-			// CommandHandler(command);
+			CommandHandler(command);
 			System.out.println(Util.getCurrentTime() + " command handle over");// for
 																				// log
 			// System.out.println(s);
@@ -2523,8 +2538,14 @@ public class ConsoleMainServer {
 				// 修改心跳间
 				//String com_content = new String(com);
 				int heartIntSec = Integer.valueOf(com_content);
-				// String[] sourceStr = com_content.split(",");
+				//System.out.println(heartIntSec);
+				//System.out.println(parameter.getHeartIntSec());
 				parameter.setHeartIntSec(heartIntSec);
+				Util.writeConfigParamToFile(parameter, "config.json");
+				task.setPeriod(parameter.getHeartIntSec()*1000);
+				
+				
+				System.out.println(parameter.getHeartIntSec());
 			} else if (comType.equals("01")) {
 				//String com_content = new String(com);
 				int day_length = Integer.valueOf(com_content);
@@ -2545,22 +2566,24 @@ public class ConsoleMainServer {
 				}
 			} else if (comType.equals("04")) {
 				// 获取supervisor运行日志
-				sendProcessLog("var/log/hit_log/supervisord.log");
+				sendProcessLog("/var/log/hit_log/supervisord.log",Util.getCurrentTime()+" supervisord",10);
 			} else if (comType.equals("05")) {
 				// 获取集中器后台进程运行日志
-				sendProcessLog("var/log/hit_log/concentratorback.stderr.log");
-				sendProcessLog("var/log/hit_log/concentratorback.stdout.log");
+				//sendProcessLog("/home/fan/upper_server.py",Util.getCurrentTime()+" gunicorn.stdout",10);
+				//sendProcessLog("/var/log/hit_log/gunicorn.stdout.log",Util.getCurrentTime()+" gunicorn.stdout",3);
+				sendProcessLog("/var/log/hit_log/concentratorback.stderr.log",Util.getCurrentTime()+" concentratorback.stderr",10);
+				sendProcessLog("/var/log/hit_log/concentratorback.stdout.log",Util.getCurrentTime()+" concentratorback.stdout",10);
 			} else if (comType.equals("06")) {
 				// 获取集中器前台运行日志
-				sendProcessLog("var/log/hit_log/gunicorn.stderr.log");
-				sendProcessLog("var/log/hit_log/gunicorn.stdout.log");
+				sendProcessLog("/var/log/hit_log/gunicorn.stderr.log",Util.getCurrentTime()+" gunicorn.stderr",10);
+				sendProcessLog("/var/log/hit_log/gunicorn.stdout.log",Util.getCurrentTime()+" gunicorn.stdout",3);
 			} else if (comType.equals("07")) {
 				// 获取tunslip运行日志
-				sendProcessLog("var/log/hit_log/tunslip6.stderr.log");
-				sendProcessLog("var/log/hit_log/tunslip6.stdout.log");
+				sendProcessLog("/var/log/hit_log/tunslip6.stderr.log",Util.getCurrentTime()+" tunslip6.stderr",10);
+				sendProcessLog("/var/log/hit_log/tunslip6.stdout.log",Util.getCurrentTime()+" tunslip6.stdout",10);
 			} else if (comType.equals("08")) {
 				// 获取ppp运行日志
-				sendProcessLog("var/log/hit_log/ppp-connect-errors");
+				sendProcessLog("/var/log/hit_log/ppp-connect-errors",Util.getCurrentTime()+" ppp-connect-errors",10);
 			} else if (comType.equals("09")) {
 				// 获取集中器指令下发记录
 				sendCommandBefore();
@@ -2620,8 +2643,8 @@ public class ConsoleMainServer {
 		String cmd = "rm topo4.db";
 		System.out.println(cmd);
 		Process commandProcess = Runtime.getRuntime().exec(cmd);
-		//final BufferedReader input = new BufferedReader(new InputStreamReader(commandProcess.getInputStream()));
-		//final BufferedReader err = new BufferedReader(new InputStreamReader(commandProcess.getErrorStream()));
+		final BufferedReader input = new BufferedReader(new InputStreamReader(commandProcess.getInputStream()));
+		final BufferedReader err = new BufferedReader(new InputStreamReader(commandProcess.getErrorStream()));
 	}
 	// get process information ,test over
 	public byte[] getProcessState() throws IOException {
@@ -2732,13 +2755,13 @@ public class ConsoleMainServer {
 	}
 
 	// send Process Log test over
-	public byte[] sendProcessLog(String logName) {
+	public byte[] sendProcessLog(String logName,String targetFileName,int lines) {
 		// org.apache.log4j.BasicConfigurator.configure();
 		try {
 			WriteFTPFile write = new WriteFTPFile();
-			String UploadFile = logName;
-			System.out.println("send Process Log filename:" + UploadFile);// for
-																			// //
+			String UploadFile = targetFileName;
+			System.out.println(Util.getCurrentTime()+" send Process Log filename:" + UploadFile);// for
+			WriteDataToFile.getLine(logName,targetFileName ,lines);															// //
 																			// log
 			write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
 					UploadFile);
@@ -2783,6 +2806,9 @@ public class ConsoleMainServer {
 	}
 
 	public void getSupervisorStatus() throws IOException {
+		WriteDataToFile superviserStatus = null;
+		String fileName = Util.getCurrentTime()+" supervisor status";
+		superviserStatus = new WriteDataToFile(fileName);
 		String command1 = "supervisorctl status";
 		Process commandProcess = Runtime.getRuntime().exec(command1);
 		final BufferedReader input = new BufferedReader(new InputStreamReader(commandProcess.getInputStream()));
@@ -2791,16 +2817,23 @@ public class ConsoleMainServer {
 		try {
 			while ((line = input.readLine()) != null) {
 				System.out.println(line);
-				SendToupperMessage(line.getBytes());
+				//SendToupperMessage(line.getBytes());
+				superviserStatus.append(line);
 			}
 			input.close();
 		} catch (IOException e) {
 			err.close();
 		}
+		
+		System.out.println("send supervisor status:" + fileName);// for
+																		// //
+		WriteFTPFile write = new WriteFTPFile();															// log
+		write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
+				fileName);
 	}
 
 	public void concentratorBackRestart() throws IOException {
-		String command1 = "supervisorctl restart concentratorBack";
+		String command1 = "supervisorctl restart concentratorback";
 		Process commandProcess = Runtime.getRuntime().exec(command1);
 		final BufferedReader input = new BufferedReader(new InputStreamReader(commandProcess.getInputStream()));
 		final BufferedReader err = new BufferedReader(new InputStreamReader(commandProcess.getErrorStream()));
@@ -2978,14 +3011,36 @@ public class ConsoleMainServer {
 		return new InetSocketAddress(InetAddress.getByName(host), port);
 	}
 
+	
+
+    public abstract class ReschedulableTimerTask extends TimerTask {  
+        public void setPeriod(long period) {  
+            //缩短周期，执行频率就提高  
+            setDeclaredField(TimerTask.class, this, "period", period);  
+        }  
+          
+        //通过反射修改字段的值  
+        boolean setDeclaredField(Class<?> clazz, Object obj, String name, Object value) {  
+            try {  
+                Field field = clazz.getDeclaredField(name);  
+                field.setAccessible(true);  
+                field.set(obj, value);  
+                return true;  
+            } catch (Exception ex) {  
+                ex.printStackTrace();  
+                return false;  
+            }  
+        }  
+    }  
+    
 	public static void main(String[] args) throws IOException {
 		new ConsoleMainServer();
 		// commandAssemble(1,"c0",0x80);
 		// commandAssemble(1,"c0",0xc0);
 		// commandAssemble(1,"c0",0x40);
 		// commandAssemble(1,"c0",0xc1);
-		
-		String aa = commandAssemble(1,"15:0:17:-128, -127:40:57","42");
+		//sendDataBase_b("2017-08-18 19:22:31");
+		//String aa = commandAssemble(1,"15:0:17:-128, -127:40:57","42");
 		//{"type": "pama_syn", "pama_data": {"hour": "21", "level": 0, "seqNum": 17, "period": "2", "bitmap": [-128, 0, 0, 0, 8, 0, 0, 0, 0, -128, 0, 0, 0, 8, 0, 0, 0, 0], "second": "59", "state": true, "minute": "10"}}
 
 		//Upper_messageHandler(aa);

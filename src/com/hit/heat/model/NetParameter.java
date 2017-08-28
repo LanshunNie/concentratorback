@@ -39,6 +39,7 @@ public class NetParameter {
 	private String ftphost;   
 	private String ftpPwd;
 	private int ftpPort;
+	private String serverIp;
 	public NetParameter(){
 	}
 	/**
@@ -48,7 +49,7 @@ public class NetParameter {
 			int tcpPort,int tcpByWebPort, int tcpRemoteConfigPort,String udpAddr,int udpPort,
 			String rootAddr,int rootPort,String tcpWebServerAddr,int tcpWebServerPort,
 			String remoteAddr,int remotePort,int netPort,int dayLength,int appSendLength,String upperAddr,int upperPort,
-			String ftpuser,String ftphost,String ftpPwd,int ftpPort) {
+			String ftpuser,String ftphost,String ftpPwd,int ftpPort,String serverIp) {
 		// TODO 自动生成的构造函数存根
 		this.id = id;
 		this.HeartIntSec = HeartIntSec;
@@ -76,6 +77,7 @@ public class NetParameter {
 		this.ftphost = ftphost;   
 		this.ftpPwd = ftpPwd;
 		this.ftpPort = ftpPort;
+		this.serverIp = serverIp;
 	}
 	
 	public String getId() {
@@ -324,5 +326,11 @@ public class NetParameter {
 	}
 	public void setftpPort(int ftpPort) {
 		this.ftpPort = ftpPort;
+	}
+	public String getserverIp() {
+		return serverIp;
+	}
+	public void setserverIp(String serverIp) {
+		this.serverIp = serverIp;
 	}
 }

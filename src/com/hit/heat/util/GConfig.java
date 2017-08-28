@@ -282,7 +282,7 @@ public class GConfig {
 
 		try {
 			IntValue = json.getInt("HeartIntSec");
-			if (IntValue <= 0) {
+			if (IntValue >= 0) {
 				parameter.setHeartIntSec(IntValue);
 			} else {
 				parameter.setHeartIntSec(40);
@@ -297,7 +297,7 @@ public class GConfig {
 
 		try {
 			IntValue = json.getInt("AckHeartInt");
-			if (IntValue <= 0) {
+			if (IntValue >= 0) {
 				parameter.setAckHeartInt(IntValue);
 			} else {
 				parameter.setAckHeartInt(3);
@@ -312,7 +312,7 @@ public class GConfig {
 
 		try {
 			IntValue = json.getInt("MaxAckFail");
-			if (IntValue <= 0) {
+			if (IntValue >= 0) {
 				parameter.setMaxAckFail(IntValue);
 			} else {
 				parameter.setMaxAckFail(30);
@@ -437,6 +437,21 @@ public class GConfig {
 		} catch (JSONException e) {
 			// TODO: handle exception
 			parameter.setftpPort(21);
+			hasException = true;
+		}
+		
+		
+		try {
+			value = json.getString("serverIp");
+			if (!value.isEmpty()) {
+				parameter.setserverIp(value);
+			} else {
+				parameter.setserverIp("127.0.0.1");
+				hasException = true;
+			}
+		} catch (JSONException e) {
+			// TODO: handle exception
+			parameter.setserverIp("127.0.0.1");
 			hasException = true;
 		}
 		return parameter;

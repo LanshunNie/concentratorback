@@ -140,7 +140,7 @@ while 1:
             begin_time = raw_input("input the begin time:")
             length = len(begin_time)
             reply=struct.pack('5b19s1b',length+6,16,112,length,16,begin_time,0)
-            print(secs)
+            print(begin_time)
             s.sendto(reply,address)
         elif type == "000":
             #change heartbeat period
@@ -148,7 +148,6 @@ while 1:
             length = len(period)
             length_s = '%d'%length
             reply=struct.pack('5b'+length_s+'s1b',length+6,16,48,length,0,period,0)
-            print(secs)
             s.sendto(reply,address)
         elif type == "003":
             #supervisor status
