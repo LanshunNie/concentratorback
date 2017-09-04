@@ -1842,16 +1842,18 @@ public class ConsoleMainServer {
 //		}
 		
 		System.out.println("");
+		byte[] eightBit = new byte[8];
 		for (i = 0; i < 18; i++) {
 			//System.out.print(i);
 			bitmap_a = bitmap[i];
 			//System.out.print(bitmap_a+"&& ");
+			
 			for (j = 0; j < 8; j++) {
-				bit[t] = (byte) (bitmap_a & 1);
+				eightBit[j] = (byte) (bitmap_a & 1);
 				bitmap_a = (byte) (bitmap_a >> 1);
 				//System.out.print(" " + bit[t]);
 				//System.out.println(t + " " + bit[t]);
-				t++;
+				bit[8*i+7-j] = eightBit[j];
 			}
 			//System.out.println();
 		}
@@ -1907,13 +1909,16 @@ public class ConsoleMainServer {
 			if (bit[count] == 1) {
 				if ((minutes * 60 + second) < 330) {
 					difference = 330 - (minutes * 60 + second);
+				} else if((minutes * 60 + second) > 480) {
+					while (bit[count + i] != 1) {
+						i += 1;
+					}
+					difference = (600 - (minutes * 60 + second)) + (i - 1) * 600 + 330;
 				}
 			} else {
 				while (bit[count + i] != 1) {
 					i += 1;
 				}
-				// System.out.println("active difference :" + difference + " i:"
-				// + i);
 				difference = (600 - (minutes * 60 + second)) + (i - 1) * 600 + 330;
 			}
 		} else {
@@ -2067,7 +2072,6 @@ public class ConsoleMainServer {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-
 			}
 		} else if (has_return == 2) {
 			try {
@@ -2340,6 +2344,7 @@ public class ConsoleMainServer {
 		}
 		if (send_to_net == 1 || send_to_net == -1) {
 			if (Net_Status_flag != 6) {
+				System.out.println("PPPPPPPPPPPPPPPPPPPPPPPPPPP");
 				// byte[] bitmap = new
 				// byte[]{-1,-128,35,84,72,-128,61,-2,16,2,4,68,90,48,0,0,8,10};
 				//byte[] bitmap = new byte[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };

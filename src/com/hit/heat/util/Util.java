@@ -1197,7 +1197,7 @@ public class Util {
 		//System.out.println(hour+","+minute+","+count+","+index+","+inbyte);
 		//System.out.println("bitmap[index]:"+bitmap[index]);
 		//System.out.println("bitmap[index] >> inbyte:"+(bitmap[index] >> inbyte));
-		if ((bitmap[index] >> inbyte) % 2 == 1 || (bitmap[index] >> inbyte) % 2 == -1) {
+		if ((bitmap[index] >> (7-inbyte)) % 2 == 1 || (bitmap[index] >> (7-inbyte)) % 2 == -1) {
 			//System.out.println("true");
 			return true;
 		} else{
