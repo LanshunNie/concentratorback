@@ -51,10 +51,14 @@ while 1:
         elif type == "141":
             #change report period
             period = raw_input("input the period:")
-            length = len(period)
+            if (int(period)<16):
+                period_s = "0" + hex(int(period))[2:]
+            else:
+                period_s = hex(int(period))[2:]
+            length = len(period_s)
             length_s = '%d'%length
-            reply=struct.pack('5b'+length_s+'s1b',length+6,16,-96,length,65,period,0)
-            print(secs)
+            reply=struct.pack('5b'+length_s+'s1b',length+6,16,-96,length,65,period_s,0)
+            print(period_s)
             s.sendto(reply,address)
         elif type == "142":
             #config schedule command

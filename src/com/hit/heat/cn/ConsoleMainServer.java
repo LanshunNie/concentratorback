@@ -2213,7 +2213,7 @@ public class ConsoleMainServer {
 			} else if (comType.equals("40") || comType.equals("41")) {
 				commands = "{\"type\": \"mcast_ack\", \"pama_data\": \"" + comType + com_content
 						+ "\"}";
-			} else if (comType.equals("C2")) {
+			} else if (comType.equals("C2") ) {
 				// String com_content = new String(com);
 				String[] sourceStr = com_content.split(":");
 				int addnum = sourceStr.length;
