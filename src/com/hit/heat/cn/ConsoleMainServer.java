@@ -18,6 +18,7 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -348,28 +349,63 @@ public class ConsoleMainServer {
 //				}
 //			}, 0, 1000 * 300);
 
-			// timing report application data
-			// APPTimer.schedule(new TimerTask() {
-			// public void run() {
-			// //System.out.println("APP down daylength:");// for log
-			// int i = 0;
-			// Util.getCurrentDateTime(Util.getCurrentDateTime());
-			// int appsend_length = parameter.getappSendLength();
-			// //System.out.println("APP send length:" + appsend_length);// for
-			// // log
-			// String gap = Integer.toHexString(appsend_length);
-			// int dif = 6 - gap.length();
-			// for (i = 0; i < dif; i++) {
-			// gap = "0" + gap;
-			// }
-			// System.out.println("gap:"+gap);
-			// byte[] command = Util.formatByteStrToByte(gap);
-			// sendApplicationData(command);
-			// //System.out.println(Util.getCurrentTime()+" upload Application
-			// file");// for log
-			// }
-			// }, 0, 1000 * 47);
-			// 0, 1000 * parameter.getdayLength() * 24 * 3600);
+			 //timing report application data
+			APPTimer.schedule(new TimerTask() {
+				public void run() {
+					int appsend_length = parameter.getappSendLength();
+					System.out.println(Util.getCurrentTime()+" upload Application file");// for log
+					String Currenttime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+					Calendar cal = Calendar.getInstance();
+					long time1 = 0,begintime = 0;
+					String begint = Util.getCurrentTime();
+					try {
+						cal.setTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(Currenttime));
+						time1 = cal.getTimeInMillis();
+						begintime = time1 - (appsend_length * 24) * (1000 * 3600);
+						Date d = new Date(begintime);
+						begint = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					SqlOperate.dataBaseOut(begint);
+					WriteFTPFile write = new WriteFTPFile();
+					write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
+							"topo4.db");
+					String cmd = "rm topo4.db";
+					System.out.println(cmd);
+					Process commandProcess;
+					try {
+						commandProcess = Runtime.getRuntime().exec(cmd);
+						final BufferedReader input = new BufferedReader(new InputStreamReader(commandProcess.getInputStream()));
+						final BufferedReader err = new BufferedReader(new InputStreamReader(commandProcess.getErrorStream()));
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			 //}, 0, 1000 * 47);
+			 },0, 1000 * parameter.getdayLength() * 24 * 3600);
+			
+//			 APPTimer.schedule(new TimerTask() {
+//				 public void run() {
+//				 //System.out.println("APP down daylength:");// for log
+//				 int i = 0;
+//				 Util.getCurrentDateTime(Util.getCurrentDateTime());
+//				 int appsend_length = parameter.getappSendLength();
+//				 //System.out.println("APP send length:" + appsend_length);// for
+//				 // log
+//				 String gap = Integer.toHexString(appsend_length);
+//				 int dif = 6 - gap.length();
+//				 for (i = 0; i < dif; i++) {
+//					 gap = "0" + gap;
+//				 }
+//				 System.out.println("gap:"+gap);
+//				 byte[] command = Util.formatByteStrToByte(gap);
+//				 sendApplicationData(appsend_length);
+//				 System.out.println(Util.getCurrentTime()+" upload Application file");// for log
+//				 }
+//			 //}, 0, 1000 * 47);
+//			 },0, 1000 * parameter.getdayLength() * 24 * 3600);
 
 			try {
 				nioSynConfigServer.start();
@@ -1427,10 +1463,25 @@ public class ConsoleMainServer {
 						e.printStackTrace();
 					}
 					break;
-
+					
 				default:
 					break;
 				}
+				String returnMessage = sb.toString();
+				WriteFTPFile write = new WriteFTPFile();
+				String UploadFile = "return_message";
+				WriteDataToFile returnFile;
+				try {
+					returnFile = new WriteDataToFile("return_message");
+					returnFile.clearAll(UploadFile);
+					returnFile.append(returnMessage);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} 															// log
+				write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
+						UploadFile);
+				
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -1932,7 +1983,7 @@ public class ConsoleMainServer {
 		}
 		// System.out.println("count + i:" + count + i + " /6:" + (count + i) /
 		// 6 + " %6:" + (count + i) % 6);
-
+		//SendToupperMessage(("please wait for "+difference).getBytes());
 		return difference;
 	}
 
@@ -2033,6 +2084,10 @@ public class ConsoleMainServer {
 		final int return1 = has_return;
 		final String cache1 = cacheCommand;
 		final byte[] com1 = com;
+		
+		WriteFTPFile write = new WriteFTPFile();
+		String UploadFile = "wait_time.txt";
+		WriteDataToFile file = new WriteDataToFile(UploadFile);
 		// String filename = null;
 		String currenttime = Util.getCurrentTime();
 		String[] times = currenttime.substring(11).split(":");
@@ -2052,7 +2107,13 @@ public class ConsoleMainServer {
 			if (cache == 1) {
 				Timer timer = new Timer();
 				wait = time_diffence(1, getbit());
+				String waitMessage= Util.getCurrentTime()+" "+comType+" "+wait;
 				System.out.println("wait for :" + wait + "s");
+				file.clearAll(UploadFile);
+				file.append(waitMessage);
+				write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
+						UploadFile);
+				
 				timer.schedule(new TimerTask() {
 					public void run() {
 						try {
@@ -2084,7 +2145,13 @@ public class ConsoleMainServer {
 			// System.out.println("等待配置s");
 			if (cache == 1) {
 				wait = time_diffence(1, getbit());
+				String waitMessage= Util.getCurrentTime()+" "+comType+" "+wait;
 				System.out.println(Util.getCurrentTime() + "wait for :" + wait + "s");
+				file.clearAll(UploadFile);
+				file.append(waitMessage);
+				write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
+						UploadFile);
+				
 				Timer timer = new Timer();
 				timer.schedule(new TimerTask() {
 					public void run() {
@@ -2112,7 +2179,13 @@ public class ConsoleMainServer {
 			// SqlOperate.commandCache_a(cacheCommand);
 			if (cache == 1) {
 				wait = time_diffence(1, getbit());
+				String waitMessage= Util.getCurrentTime()+" "+comType+" "+wait;
 				System.out.println(Util.getCurrentTime() + " wait for :" + wait + "s");
+				file.clearAll(UploadFile);
+				file.append(waitMessage);
+				write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
+						UploadFile);
+				
 				Timer timer = new Timer();
 				timer.schedule(new TimerTask() {
 					public void run() {
@@ -2140,6 +2213,12 @@ public class ConsoleMainServer {
 					}
 					Timer timer = new Timer();
 					System.out.println(Util.getCurrentTime() + " wait for :" + wait + "s");
+					String waitMessage= Util.getCurrentTime()+" "+comType+" "+wait;
+					file.clearAll(UploadFile);
+					file.append(waitMessage);
+					write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
+							UploadFile);
+					
 					timer.schedule(new TimerTask() {
 						public void run() {
 							// System.out.println("等待配置4");
@@ -2173,6 +2252,12 @@ public class ConsoleMainServer {
 				} else {
 					wait = time_diffence(1, getbit());
 					System.out.println(Util.getCurrentTime() + " wait for :" + wait + "s");
+					String waitMessage= Util.getCurrentTime()+" "+comType+" "+wait;
+					file.clearAll(UploadFile);
+					file.append(waitMessage);
+					write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
+							UploadFile);
+					
 					Timer timer = new Timer();
 					timer.schedule(new TimerTask() {
 						public void run() {
@@ -2571,24 +2656,30 @@ public class ConsoleMainServer {
 				}
 			} else if (comType.equals("04")) {
 				// 获取supervisor运行日志
-				sendProcessLog("/var/log/hit_log/supervisord.log",Util.getCurrentTime()+" supervisord",10);
+				int log_length = Integer.valueOf(com_content);
+				//sendProcessLog("supervisord.log",Util.getCurrentTime()+" supervisord",log_length);
+				sendProcessLog("/var/log/hit_log/supervisord.log",Util.getCurrentTime()+" supervisord",log_length);
 			} else if (comType.equals("05")) {
 				// 获取集中器后台进程运行日志
 				//sendProcessLog("/home/fan/upper_server.py",Util.getCurrentTime()+" gunicorn.stdout",10);
 				//sendProcessLog("/var/log/hit_log/gunicorn.stdout.log",Util.getCurrentTime()+" gunicorn.stdout",3);
-				sendProcessLog("/var/log/hit_log/concentratorback.stderr.log",Util.getCurrentTime()+" concentratorback.stderr",10);
-				sendProcessLog("/var/log/hit_log/concentratorback.stdout.log",Util.getCurrentTime()+" concentratorback.stdout",10);
+				int log_length = Integer.valueOf(com_content);
+				sendProcessLog("/var/log/hit_log/concentratorback.stderr.log",Util.getCurrentTime()+" concentratorback.stderr",log_length);
+				sendProcessLog("/var/log/hit_log/concentratorback.stdout.log",Util.getCurrentTime()+" concentratorback.stdout",log_length);
 			} else if (comType.equals("06")) {
 				// 获取集中器前台运行日志
-				sendProcessLog("/var/log/hit_log/gunicorn.stderr.log",Util.getCurrentTime()+" gunicorn.stderr",10);
-				sendProcessLog("/var/log/hit_log/gunicorn.stdout.log",Util.getCurrentTime()+" gunicorn.stdout",3);
+				int log_length = Integer.valueOf(com_content);
+				sendProcessLog("/var/log/hit_log/gunicorn.stderr.log",Util.getCurrentTime()+" gunicorn.stderr",log_length);
+				sendProcessLog("/var/log/hit_log/gunicorn.stdout.log",Util.getCurrentTime()+" gunicorn.stdout",log_length);
 			} else if (comType.equals("07")) {
 				// 获取tunslip运行日志
-				sendProcessLog("/var/log/hit_log/tunslip6.stderr.log",Util.getCurrentTime()+" tunslip6.stderr",10);
-				sendProcessLog("/var/log/hit_log/tunslip6.stdout.log",Util.getCurrentTime()+" tunslip6.stdout",10);
+				int log_length = Integer.valueOf(com_content);
+				sendProcessLog("/var/log/hit_log/tunslip6.stderr.log",Util.getCurrentTime()+" tunslip6.stderr",log_length);
+				sendProcessLog("/var/log/hit_log/tunslip6.stdout.log",Util.getCurrentTime()+" tunslip6.stdout",log_length);
 			} else if (comType.equals("08")) {
 				// 获取ppp运行日志
-				sendProcessLog("/var/log/hit_log/ppp-connect-errors",Util.getCurrentTime()+" ppp-connect-errors",10);
+				int log_length = Integer.valueOf(com_content);
+				sendProcessLog("/var/log/hit_log/ppp-connect-errors",Util.getCurrentTime()+" ppp-connect-errors",log_length);
 			} else if (comType.equals("09")) {
 				// 获取集中器指令下发记录
 				sendCommandBefore();
@@ -2630,6 +2721,14 @@ public class ConsoleMainServer {
 				// 返回时间段的数据库
 				try {
 					sendDataBase_b(com_content);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			} else if (comType.equals("11")) {
+				// 连接网络，配置IP地址
+				try {
+					connectInternet();
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -2794,6 +2893,21 @@ public class ConsoleMainServer {
 	}
 
 	// restart centor1
+	public void connectInternet() throws IOException {
+		String command1 = "./connectInternet.sh";
+		Process commandProcess = Runtime.getRuntime().exec(command1);
+		final BufferedReader input = new BufferedReader(new InputStreamReader(commandProcess.getInputStream()));
+		final BufferedReader err = new BufferedReader(new InputStreamReader(commandProcess.getErrorStream()));
+		String line = "";
+		try {
+			while ((line = input.readLine()) != null) {
+				//System.out.println(line);
+			}
+			input.close();
+		} catch (IOException e) {
+			err.close();
+		}
+	}
 	public void restartConcentrator() throws IOException {
 		String command1 = "./restart.sh";
 		Process commandProcess = Runtime.getRuntime().exec(command1);

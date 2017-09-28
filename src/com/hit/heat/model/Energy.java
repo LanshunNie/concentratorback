@@ -74,7 +74,6 @@ public class Energy {
 	public int getNum_neighbors() {
 		return num_neighbors;
 	}
-
 	public void setNum_neighbors(int num_neighbors) {
 		this.num_neighbors = num_neighbors;
 	}
