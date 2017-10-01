@@ -461,8 +461,8 @@ public class SqlOperate {
 		close();
 	}
 	//
-	public static void dataBaseOut(String begin)  {
-		connect("jdbc:sqlite:topo4.db");
+	public static void dataBaseOut(String begin,String dataBaseName)  {
+		connect("jdbc:sqlite:" + dataBaseName + ".db");
 		//String com = "SELECT * FROM ApplicationData where currenttime >= '" + begin + "'";
 		try {
 			stat.executeUpdate("attach database 'topo3.db' as 'test'");
