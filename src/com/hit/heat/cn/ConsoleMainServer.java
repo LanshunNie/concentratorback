@@ -148,14 +148,13 @@ public class ConsoleMainServer {
 	private int seqCount;
 	private int currect_rate = 1;// second
 
-	Timer CorrectTimer = new Timer();// timing
-	Timer APPTimer = new Timer();// timing applicationdata report
-	Timer CommandDownTimer = new Timer();// timing command down
-	Timer HeartTimer = new Timer();
-	Timer Appdrop = new Timer();
-	Timer Netdrop = new Timer();
-	Timer topoTimer = new Timer();
-	Timer GPRSTimer = new Timer();
+	private Timer CorrectTimer = new Timer();// timing
+	private Timer APPTimer = new Timer();// timing applicationdata report
+	private Timer HeartTimer = new Timer();
+	private Timer Appdrop = new Timer();
+	private Timer Netdrop = new Timer();
+	private Timer topoTimer = new Timer();
+	private Timer GPRSTimer = new Timer();
 
 	private Map<String, String> IpidMap;
 	private Map<Integer, String> topoMap = new HashMap<Integer, String>();
@@ -331,7 +330,7 @@ public class ConsoleMainServer {
 			APPTimer.schedule(new TimerTask() {
 				public void run() {
 					int appsend_length = parameter.getappSendLength();
-					System.out.println(Util.getCurrentTime()+" upload Application file");// for log
+					
 					String Currenttime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 					Calendar cal = Calendar.getInstance();
 					long time1 = 0,begintime = 0;
@@ -345,24 +344,48 @@ public class ConsoleMainServer {
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-					SqlOperate.dataBaseOut(begint,"topo5");
-					WriteFTPFile write = new WriteFTPFile();
-					write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
-							"topo4.db");
-					String cmd = "rm topo4.db";
-					//System.out.println(cmd);
-					Process commandProcess;
+					String fileNameApp = Util.getCurrentTime()+"app";
+					String fileNameTopo = Util.getCurrentTime()+"topo";
 					try {
-						commandProcess = Runtime.getRuntime().exec(cmd);
-						final BufferedReader input = new BufferedReader(new InputStreamReader(commandProcess.getInputStream()));
-						final BufferedReader err = new BufferedReader(new InputStreamReader(commandProcess.getErrorStream()));
+						SqlOperate.ApplicationData_out(appsend_length, fileNameApp);
+						SqlOperate.topo_out(appsend_length, fileNameTopo);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+					WriteFTPFile write = new WriteFTPFile();
+					write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
+							fileNameApp);
+					//Util.removeFile(fileNameApp);
+					WriteFTPFile write2 = new WriteFTPFile();
+					write2.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
+							fileNameTopo);
+					//Util.removeFile(fileNameTopo);
+					deleteFile(fileNameApp);
+					deleteFile(fileNameTopo);
+//					write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
+//							"topo5.db");
+//					SqlOperate.dataBaseOut(begint,"topo5.db");
+//					System.out.println(Util.getCurrentTime()+" upload Application file");// for log
+//					WriteFTPFile write = new WriteFTPFile();
+//					write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
+//							"topo5.db");
+//					
+//					String cmd = "rm "+fileNameApp;
+//					
+//					//System.out.println(cmd);
+//					Process commandProcess;
+//					try {
+//						commandProcess = Runtime.getRuntime().exec(cmd);
+//						final BufferedReader input = new BufferedReader(new InputStreamReader(commandProcess.getInputStream()));
+//						final BufferedReader err = new BufferedReader(new InputStreamReader(commandProcess.getErrorStream()));
+//					} catch (IOException e) {
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//					}
 				}
-			 //}, 0, 1000 * 47);
-			 },0, 1000 * parameter.getdayLength() * 24 * 3600);
+			 }, 0, 1000 * 17);
+			 //},0, 1000 * parameter.getdayLength() * 24 * 3600);
 			
 			try {
 				nioSynConfigServer.start();
@@ -552,7 +575,6 @@ public class ConsoleMainServer {
 		try {
 			Process process = Runtime.getRuntime().exec(command, null, null);
 			process.waitFor();
-
 			Scanner scanner = new Scanner(process.getInputStream());
 			while (scanner.hasNextLine()) {
 				String line = scanner.nextLine();
@@ -892,7 +914,7 @@ public class ConsoleMainServer {
 						}
 						break;
 					case "unicast_ack":
-						List<String> unicast_List = parseAddrFromStr(((JSONObject) retObject).getString("addrList"));
+						//List<String> unicast_List = parseAddrFromStr(((JSONObject) retObject).getString("addrList"));
 						bitMap.setPartReUploadList(parseAddrFromStr(((JSONObject) retObject).getString("addrList")));
 						buffer = Util.packageUnicastSend(cmd, bitMap.getBitMap());
 						if (buffer[3 + bitMap.getBitMap().length] == (byte) 0xC0) {
@@ -936,7 +958,6 @@ public class ConsoleMainServer {
 					// for use
 					case "pama_corr":
 						try {
-
 							currect_rate = Integer.valueOf(((JSONObject) retObject).getString(("pama_data")));
 							System.out.println(
 									Util.getCurrentTime() + "command is change correct time sequence pama_data:"
@@ -1124,7 +1145,7 @@ public class ConsoleMainServer {
 					}
 					break;
 				case "unicast_ack":
-					List<String> unicast_List = parseAddrFromStr(((JSONObject) retObject).getString("addrList"));
+					//List<String> unicast_List = parseAddrFromStr(((JSONObject) retObject).getString("addrList"));
 					bitMap.setPartReUploadList(parseAddrFromStr(((JSONObject) retObject).getString("addrList")));
 					buffer = Util.packageUnicastSend(cmd, bitMap.getBitMap());
 					if (buffer[3 + bitMap.getBitMap().length] == (byte) 0xC0) {
@@ -1336,7 +1357,7 @@ public class ConsoleMainServer {
 	}
 
 	// these two are used to comunicate with upper
-	private byte[] packUnicastData(byte[] content) {// Unicast type 3
+	public byte[] packUnicastData(byte[] content) {// Unicast type 3
 		if (content == null || content.length == 0) {
 			return null;
 		}
@@ -1348,7 +1369,7 @@ public class ConsoleMainServer {
 		return cmd;
 	}
 
-	private byte[] packageReadData(byte[] cmd) {// multicast only command type1
+	public byte[] packageReadData(byte[] cmd) {// multicast only command type1
 		if (cmd == null || cmd.length == 0) {
 			return null;
 		}
@@ -1362,7 +1383,7 @@ public class ConsoleMainServer {
 	}
 
 	// for communicate with upper
-	private byte[] packageReadDataAck(byte[] cmd, byte[] bitmap) {// multicast
+	public byte[] packageReadDataAck(byte[] cmd, byte[] bitmap) {// multicast
 		if (cmd == null || cmd.length == 0) {
 			return null;
 		}
@@ -1967,14 +1988,12 @@ public class ConsoleMainServer {
 			} else if (comType.equals("C2") ) {
 				// String com_content = new String(com);
 				String[] sourceStr = com_content.split(":");
-				int addnum = sourceStr.length;
 				commands = "{\"type\": \"pama_syn\", \"pama_data\": {\"hour\": \"" + sourceStr[0] + "\", \"level\": "
 						+ sourceStr[6] + ", \"seqNum\": " + sourceStr[7] + ", \"period\": \"" + sourceStr[4]
 						+ "\", \"bitmap\": [" + sourceStr[3] + "], \"second\": \"" + sourceStr[2] + "\", \"state\": "
 						+ sourceStr[5] + ", \"minute\": \"" + sourceStr[1] + "\"}}";
 			} else if (comType.equals("02")) {
 				String[] sourceStr = com_content.split(":");
-				int addnum = sourceStr.length;
 				String DebugBitmap = "-1, -1, -1, -1, -1," + " -1, -1, -1, -1, -1," + " -1, -1, -1, -1, -1, -1, -1, -1";
 				commands = "{\"type\": \"debug\", \"pama_data\": {\"hour\": \"" + sourceStr[0] + "\", \"level\": "
 						+ sourceStr[3] + ", \"seqNum\": " + sourceStr[4] + ", \"bitmap\": [" + DebugBitmap
@@ -1982,13 +2001,11 @@ public class ConsoleMainServer {
 			} else if (comType.equals("42")) {
 				System.out.println(com_content);
 				String[] sourceStr = com_content.split(":");
-				int addnum = sourceStr.length;
 				commands = "{\"type\": \"schedule\", \"pama_data\": {\"hour\": \"" + sourceStr[0] + "\", \"level\": "
 						+ sourceStr[4] + ", \"seqNum\": " + sourceStr[5] + ", \"bitmap\": [" + sourceStr[3]
 						+ "], \"second\": \"" + sourceStr[2] + "\", \"minute\": \"" + sourceStr[1] + "\"}}";
 			} else if (comType.equals("81")) {
 				String[] sourceStr = com_content.split(":");
-				int addnum = sourceStr.length;
 				commands = "{\"type\": \"end_debug\", \"pama_data\": {\"hour\": \"" + sourceStr[0] + "\", \"level\": "
 						+ sourceStr[4] + ", \"seqNum\": " + sourceStr[5] + ", \"bitmap\": [" + sourceStr[3]
 						+ "], \"second\": \"" + sourceStr[2] + "\", \"minute\": \"" + sourceStr[1] + "\"}}";
@@ -2346,7 +2363,7 @@ public class ConsoleMainServer {
 	}
 	public void sendDataBase_b(String begin) throws IOException {
 		
-		SqlOperate.dataBaseOut(begin,"topo4");
+		SqlOperate.dataBaseOut(begin,"topo4.db");
 		WriteFTPFile write = new WriteFTPFile();
 		write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
 				"topo4.db");
@@ -2472,6 +2489,7 @@ public class ConsoleMainServer {
 																			// log
 			write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
 					UploadFile);
+			Util.removeFile(targetFileName);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -2552,6 +2570,7 @@ public class ConsoleMainServer {
 		WriteFTPFile write = new WriteFTPFile();															// log
 		write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
 				fileName);
+		Util.removeFile(fileName);
 	}
 
 	public void concentratorBackRestart() throws IOException {
@@ -2580,7 +2599,6 @@ public class ConsoleMainServer {
 		try {
 			while ((line = input.readLine()) != null) {
 				System.out.println(line);
-				// SendToupperMessage(line.getBytes());
 			}
 			input.close();
 		} catch (IOException e) {
@@ -2700,6 +2718,23 @@ public class ConsoleMainServer {
 		contentByteBuffer.clear();
 		contentByteBuffer.put(content);
 	}
+	
+	public boolean deleteFile(String fileName) {
+        File file = new File(fileName);
+        // 如果文件路径所对应的文件存在，并且是一个文件，则直接删除
+        if (file.exists() && file.isFile()) {
+            if (file.delete()) {
+                System.out.println(Util.getCurrentTime()+" delete " + fileName + "！");
+                return true;
+            } else {
+                System.out.println(Util.getCurrentTime()+"delete " + fileName + "fail！");
+                return false;
+            }
+        } else {
+            System.out.println(Util.getCurrentTime()+"delete fail because：" + fileName + "do not exite！");
+            return false;
+        }
+    }
 
 	public byte[] getCommandFromCache() {
 		int position = contentByteBuffer.position();
@@ -2738,6 +2773,45 @@ public class ConsoleMainServer {
     
 	public static void main(String[] args) throws IOException {
 		new ConsoleMainServer();
+		
+		
+//		int appsend_length = 1;
+//		
+//		String Currenttime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+//		Calendar cal = Calendar.getInstance();
+//		long time1 = 0,begintime = 0;
+//		String begint = Util.getCurrentTime();
+//		try {
+//			cal.setTime(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(Currenttime));
+//			time1 = cal.getTimeInMillis();
+//			begintime = time1 - (appsend_length * 24) * (1000 * 3600);
+//			Date d = new Date(begintime);
+//			begint = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(d);
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//		SqlOperate.dataBaseOut(begint,"topo5.db");
+//		System.out.println(Util.getCurrentTime()+" upload Application file");// for log
+//		WriteFTPFile write = new WriteFTPFile();
+////		write.upload(parameter.getftpuser(), parameter.getftpPwd(), parameter.getftphost(), parameter.getftpPort(),
+////				"topo5.db");
+//		
+//		String cmd = "rm topo5.db";
+//		
+//		//System.out.println(cmd);
+//		Process commandProcess;
+//		try {
+//			commandProcess = Runtime.getRuntime().exec(cmd);
+//			final BufferedReader input = new BufferedReader(new InputStreamReader(commandProcess.getInputStream()));
+//			final BufferedReader err = new BufferedReader(new InputStreamReader(commandProcess.getErrorStream()));
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+	
+		//SqlOperate.dataBaseOut("2017-08-10 00:00:00","topo5.db");
+		//SqlOperate.dataBaseOut("2017-08-10 00:00:00","topo4.db");
+		//sendDataBase_b("2017-08-10 00:00:00");
 		//System.out.print(Util.getCurrentDateTime());
 		// commandAssemble(1,"c0",0x80);
 		//sendDataBase_b("2017-08-18 19:22:31");

@@ -12,16 +12,6 @@ public class filetest {
 		
 		long start = System.currentTimeMillis();
 		for (int i = 0; i < 1000; i++) {
-//			try {
-//				CommandCache_full();
-//			} catch (SQLException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-			// NodePlace_a("111","123","1234");
-			//ApplicationData_out(12,"2017-04-27*7:42:11");
-			// commanddown_a("111","1234567890","1234567");
-			//ApplicationData_a("111","2017-04-27 7:42:11","1111");
 			p.println("111"+"2017-04-27 7:42:11"+"1111");
 			
 		}

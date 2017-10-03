@@ -327,7 +327,20 @@ public class Util {
 		}
 		return count;
 	}
-
+	public static void removeFile(String fileName) {
+		String cmd = "rm "+fileName;
+		//System.out.println(cmd);
+		Process commandProcess;
+		try {
+			commandProcess = Runtime.getRuntime().exec(cmd);
+			final BufferedReader input = new BufferedReader(new InputStreamReader(commandProcess.getInputStream()));
+			final BufferedReader err = new BufferedReader(new InputStreamReader(commandProcess.getErrorStream()));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	public static String formatByteToByteStr(byte[] bytes) {
 		StringBuilder sb = new StringBuilder(2 * bytes.length);
 		for (byte b : bytes) {

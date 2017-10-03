@@ -40,12 +40,12 @@ public class SqlOperate {
 			// create a connection to the database
 			conn = DriverManager.getConnection(url);
 			stat = conn.createStatement();
-			// System.out.println("Connection to SQLite has been established.");
+			//System.out.println("Connection to SQLite has been established.");
 			// stat.executeUpdate("create table if not exists tbl1(name
 			// varchar(20), salary int);");
 			createtables();
 		} catch (SQLException e) {
-			System.out.println("database connect fail");
+			System.out.println("database connect fail-1");
 			System.out.println(e.getMessage());
 		}
 	}
@@ -70,7 +70,7 @@ public class SqlOperate {
 					"CREATE TABLE if not exists ApplicationData(ID INTEGER PRIMARY KEY AUTOINCREMENT,NodeID varchar,"
 							+ "currenttime time,Data varchar);");
 		} catch (SQLException e) {
-			System.out.println("database create fail");
+			System.out.println("database create fail-2");
 			System.out.println(e.getMessage());
 		}
 	}
@@ -462,7 +462,8 @@ public class SqlOperate {
 	}
 	//
 	public static void dataBaseOut(String begin,String dataBaseName)  {
-		connect("jdbc:sqlite:" + dataBaseName + ".db");
+		//String connetCommand = "jdbc:sqlite:" + dataBaseName;
+		connect("jdbc:sqlite:"+dataBaseName);
 		//String com = "SELECT * FROM ApplicationData where currenttime >= '" + begin + "'";
 		try {
 			stat.executeUpdate("attach database 'topo3.db' as 'test'");
@@ -471,6 +472,7 @@ public class SqlOperate {
 				+"where currenttime >= '" + begin + "'");
 			stat.executeUpdate("insert into ApplicationData select * from test.ApplicationData "
 					+"where currenttime >= '" + begin + "'");
+			//System.out.println("over");
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
