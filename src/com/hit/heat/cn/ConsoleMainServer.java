@@ -2,6 +2,7 @@ package com.hit.heat.cn;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 
 //import java.io.BufferedReader;
 
@@ -69,7 +70,9 @@ import com.hit.heat.util.rdc_EF_Control;
 //import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
 //import com.sun.org.apache.xml.internal.security.utils.Base64;
 import com.sun.corba.se.impl.activation.CommandHandler;
+import com.sun.corba.se.impl.protocol.giopmsgheaders.Message;
 import com.sun.jmx.snmp.tasks.Task;
+import com.sun.jndi.cosnaming.IiopUrl.Address;
 import com.sun.org.apache.xalan.internal.xsltc.runtime.Parameter;
 import com.sun.xml.internal.ws.resources.StreamingMessages;
 
@@ -199,6 +202,10 @@ public class ConsoleMainServer {
 			seqCount = 0;
 			synConfig = new GSynConfig("GSynConfig.json");
 			synParameter = synConfig.getSynParameter();
+			System.out.println(synParameter.getPeriod());
+			System.out.println(synParameter.getHour());
+			System.out.println(synParameter.getLevel());
+			System.out.println(synParameter.getSeqNum());
 			// synStateFlag is the syn file`s flag of synParameter
 			synStateFlag = synParameter.isFlag();
 			//System.out.println(synStateFlag);
@@ -211,7 +218,8 @@ public class ConsoleMainServer {
 			parameter = new NetParameter("00000001", 40, 3, 30, "0.0.0.0", 12300, 12301, 12306, "aaaa::1", 8765,
 					"aaaa:0:0:0:12:7400:1:13", 5678, "192.168.1.141", 12303, "192.168.1.141", 12304, 12307, 2, 3,
 					"0.0.0.0", 12400, "xiaoming", "139.199.154.37", "xiaoming", 21,"127.0.0.1");
-			synParameter = new SynParameter(0, 0, 0, 0, 0, 0, "0".getBytes(), false, null);
+			synParameter = new SynParameter(0, 0, 0, 0, 0, 0, "10".getBytes(), false, null);
+
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -384,8 +392,8 @@ public class ConsoleMainServer {
 //						e.printStackTrace();
 //					}
 				}
-			 }, 0, 1000 * 17);
-			 //},0, 1000 * parameter.getdayLength() * 24 * 3600);
+			 //}, 0, 1000 * 17);
+			 },0, 1000 * parameter.getdayLength() * 24 * 3600);
 			
 			try {
 				nioSynConfigServer.start();
@@ -1132,7 +1140,7 @@ public class ConsoleMainServer {
 						sb.append("multicast节点唤醒command");
 					}else if (buffer[2] == (byte) 0xC4) {
 						System.out.println(Util.getCurrentTime() + " command is check node");
-						sb.append("multicast节点查询command");
+						sb.append("multicast唤醒查询command");
 					} else {
 						System.out.println(Util.getCurrentTime() + " wrong~~");
 					}
@@ -1521,6 +1529,7 @@ public class ConsoleMainServer {
 					+ hour + ":" + minute + ":" + second);
 			// System.out.println();
 			if (!synStateFlag) {
+				System.out.println("syn error");
 
 			} else {
 				switch (recvLevel) {
@@ -1532,6 +1541,7 @@ public class ConsoleMainServer {
 						CurrentTime currentTime = Util.getCurrentDateTime(Util.getCurrentDateTime());
 						SendToRootSynMsg(Util.getSynMessage(seqCount, 0, currentTime.getHour(), currentTime.getMinute(),
 								currentTime.getSecond(), synParameter.getPeriod(), synParameter.getBitmap()));
+//						System.out.println("aa "+synParameter.getPeriod()+"  "+seqCount);
 
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -1544,6 +1554,7 @@ public class ConsoleMainServer {
 						seqCount = Integer.parseInt(String.valueOf(String.format("%02X", orpl[0])), 16) + 1;
 						SendToRootSynMsg(Util.getSynMessage(seqCount, 0, currentTime.getHour(), currentTime.getMinute(),
 								currentTime.getSecond(), synParameter.getPeriod(), synParameter.getBitmap()));
+	//					System.out.println("bb"+synParameter.getPeriod()+"  "+seqCount);
 						// seqCount ++;
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -1557,6 +1568,7 @@ public class ConsoleMainServer {
 						seqCount = Integer.parseInt(String.valueOf(String.format("%02X", orpl[0])), 16) + 1;
 						SendToRootSynMsg(Util.getSynMessage(seqCount, 0, currentTime.getHour(), currentTime.getMinute(),
 								currentTime.getSecond(), synParameter.getPeriod(), synParameter.getBitmap()));
+		//				System.out.println("cc"+synParameter.getPeriod()+"  "+seqCount);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -2633,7 +2645,7 @@ public class ConsoleMainServer {
 			} else {
 				byte type = message[1];// 0 is globaltype 1 is type
 				String[] nodesIP = addr.split(":");
-				message = Arrays.copyOfRange(message, 2, message.length);
+				//message = Arrays.copyOfRange(message, 2, message.length);
 				switch (type) {
 				// case GlobalDefines.GlobalCmd.G_DEF_READ_DATA:// multicast
 				case GlobalDefines.GlobalCmd.G_DEF_READ_DATA:// multicast
@@ -2773,7 +2785,70 @@ public class ConsoleMainServer {
     
 	public static void main(String[] args) throws IOException {
 		new ConsoleMainServer();
+	
+//		File file = new File("App.log");//Text文件
+//		BufferedReader br = new BufferedReader(new FileReader(file));//构造一个BufferedReader类来读取文件
+//		String s = null;
+//		while((s = br.readLine())!=null){//使用readLine方法，一次读一行
+//			//System.out.println(s);
+//			String[] s1 = s.split("\\$");
+//			String mes = s1[0];
+//			String[] s5 = mes.split(" ");
+//			String addr = s5[2];
+//			String Date = s5[0];
+//			String timess = s5[1];
+//			
+//			String mess = s1[1];
+//			//System.out.println(addr);
+//			//System.out.println(mess);
+//			//System.out.println(Date);
+//			//System.out.println(Date+" "+timess);
+//			String[] s3 = mess.split(" ");
+//			byte[] message = new byte[s3.length];
+//			for (int i = 1;i<s3.length;i++){
+//				int num = Integer.valueOf(s3[i]);
+//				message[i] = (byte)num;
+//				
+//			}
+//			byte[] orpl = new byte[message.length - 3];
+//			System.arraycopy(message, 3, orpl, 0, message.length - 3);
+//			//System.out.println(addr + "energy：" + Util.formatBytesToStr(message));
+//			Energy en = Util.Create_Energy(addr, orpl);
+//			SqlOperate.append2(en,Date,Date+" "+timess);
+//			
+//		}
+//		System.out.println("over");
+//		br.close();;
 		
+		
+//		File file = new File("Net.log");//Text文件
+//		BufferedReader br = new BufferedReader(new FileReader(file));//构造一个BufferedReader类来读取文件
+//		String s = null;
+//		while((s = br.readLine())!=null){//使用readLine方法，一次读一行
+//			//System.out.println(s);
+//			String[] s1 = s.split("\\|");
+//			String mes = s1[0];
+//			String[] s5 = mes.split(" ");
+//			String addr = "aaaa:0:0:0:12:7400:1:"+s5[2];
+//			String Date = s5[0];
+//			String timess = s5[1];
+//			//System.out.println(s5[2]);
+//			//System.out.println(Date+" "+timess);
+//			SqlOperate.ApplicationData_a2(s5[2], Date+" "+timess,s1[1]);
+//			
+//		}
+//		System.out.println("over");
+//		br.close();;
+		
+		
+//		System.out.print("-----------------------------");
+//		byte[] orpl = new byte[message.length - 3];
+//		System.arraycopy(message, 3, orpl, 0, message.length - 3);
+//		System.out.println(addr + "energy：" + Util.formatBytesToStr(message));
+//
+//		Energy en = Util.Create_Energy(addr, orpl);
+//		SqlOperate.append(en);
+
 		
 //		int appsend_length = 1;
 //		

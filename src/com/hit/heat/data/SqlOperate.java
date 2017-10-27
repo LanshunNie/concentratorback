@@ -106,6 +106,31 @@ public class SqlOperate {
 		}
 		close();
 	}
+	public static void append2(Energy data,String Date,String timess) {
+		connect("jdbc:sqlite:topo3.db");
+		try {
+			String temp = null;
+			rdc_EF_Control.calCurrent(data);
+			temp = "null,'" + data.getId() + "','" + data.getParentID() + "'," + data.getCPU() + "," + data.getLPM()
+					+ "," + data.getSend_time() + "," + data.getReceive_time() + "," + data.getVoltage() + ","
+					+ data.getSynTime() + ",'" + data.getBeacon() + "'," + data.getNum_neighbors() + ","
+					+ data.getRtmetric() + "," + data.getReboot() + "," + data.getCycleTime() + ",'"
+					+ data.getCycleTimeDirection() + "','" + data.getNodecurrenttime2(Date) + "','" + timess
+					+ "'," + rdc_EF_Control.calCurrent(data);
+			;
+
+			stat.executeUpdate("insert into NetMonitor values (" + temp + ")");
+			// System.out.println(Util.getCurrentTime()+"append to netMonitor
+			// success"+"append values:"+temp);//for log
+			//System.out.println(Util.getCurrentTime() + " topo:" + data.getId());
+		} catch (SQLException e) {
+			close();
+			System.out.println("netMonitor append fail");
+			System.out.println(e.getMessage());
+
+		}
+		close();
+	}
 
 	// 网络检测表统计
 	public static int NetMonitor_count() throws SQLException {
@@ -308,6 +333,25 @@ public class SqlOperate {
 		// log
 	}
 
+	public static void ApplicationData_a2(String NodeID, String currenttime, String data) {
+		connect("jdbc:sqlite:topo3.db");
+		String temp = null;
+		temp = "null,'" + NodeID + "','" + currenttime + "','" + data + "'";
+
+		try {
+			stat.executeUpdate("insert into ApplicationData values(" + temp + ")");
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			close();
+			e.printStackTrace();
+		}
+		close();
+		// p.println(temp);
+		// System.out.println(Util.getCurrentTime()+"append to
+		// ApplicationData success"+"append values:"+temp);//for log
+		// System.out.println(Util.getCurrentTime()+" app:"+NodeID);//for
+		// log
+	}
 	public static int ApplicationData_count() throws SQLException {
 		connect("jdbc:sqlite:topo3.db");
 		ResultSet rs = stat.executeQuery("select * from ApplicationData");

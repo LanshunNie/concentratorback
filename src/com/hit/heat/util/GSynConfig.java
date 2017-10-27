@@ -64,6 +64,20 @@ public class GSynConfig {
 			hasException = true;
 		}
 		try {
+			value = json.getInt("period");
+			if(value!=0){
+				synParameter.setPeriod(value);;
+			}else{
+				synParameter.setPeriod(1);
+				hasException = true;
+			}
+			
+		} catch (JSONException e) {
+			// TODO: handle exception
+			synParameter.setSeqNum(0);
+			hasException = true;
+		}
+		try {
 			value = json.getInt("level");
 			if(value!=0){
 				synParameter.setLevel(value);

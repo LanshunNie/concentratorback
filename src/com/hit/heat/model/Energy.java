@@ -171,5 +171,15 @@ public class Energy {
 		Nodecurrenttime = DateCurrenttime + Nodecurrenttime;
 		return Nodecurrenttime;
 	}
+	
+	public String getNodecurrenttime2(String Date) {
+		String temp = Util.getCurrentTime();
+//		System.out.println(temp);
+		//String DateCurrenttime = temp.substring(0, 11);
+		
+//		System.out.println(DateCurrenttime);
+		Nodecurrenttime = Date+ " " + Nodecurrenttime;
+		return Nodecurrenttime;
+	}
 
 }
