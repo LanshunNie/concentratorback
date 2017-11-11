@@ -91,7 +91,7 @@ public class SqlOperate {
 					+ data.getSynTime() + ",'" + data.getBeacon() + "'," + data.getNum_neighbors() + ","
 					+ data.getRtmetric() + "," + data.getReboot() + "," + data.getCycleTime() + ",'"
 					+ data.getCycleTimeDirection() + "','" + data.getNodecurrenttime() + "','" + Util.getCurrentTime()
-					+ "'," + rdc_EF_Control.calCurrent(data);
+					+ "'," + data.getCurrent();
 			;
 
 			stat.executeUpdate("insert into NetMonitor values (" + temp + ")");

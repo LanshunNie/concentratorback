@@ -28,6 +28,8 @@ import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
+
 import com.hit.heat.util.Frag_Recb;
 import com.hit.heat.model.Energy;
 
@@ -73,6 +75,7 @@ import com.sun.corba.se.impl.activation.CommandHandler;
 import com.sun.corba.se.impl.protocol.giopmsgheaders.Message;
 import com.sun.jmx.snmp.tasks.Task;
 import com.sun.jndi.cosnaming.IiopUrl.Address;
+import com.sun.org.apache.bcel.internal.generic.ReturnaddressType;
 import com.sun.org.apache.xalan.internal.xsltc.runtime.Parameter;
 import com.sun.xml.internal.ws.resources.StreamingMessages;
 
@@ -524,7 +527,7 @@ public class ConsoleMainServer {
 				return;
 			}
 		});
-
+		System.out.println("tcpser");
 		nettyServer = new NettyServer(parameter.getTcpAddr(), parameter.getTcpPort(), new NettyMsgHandlerExecutor());
 		contentByteBuffer = ByteBuffer.allocate(128);
 		bitMap = new BitMap();
@@ -727,6 +730,7 @@ public class ConsoleMainServer {
 	// start Netty nio tcp server
 	public void startNIOTcpServer() {
 		try {
+			System.out.println("tcpserver");
 			nettyServer.start(parameter.getTcpAddr(), parameter.getTcpPort());// new
 			// NettyMsgHandlerExecutor()
 
@@ -820,7 +824,6 @@ public class ConsoleMainServer {
 		@Override
 		public String messageHandler(String message) {
 			System.out.println(Util.getCurrentTime() + " front command:" + message);
-
 			Object retObject;
 			try {
 				// command = Command.parseCmdFromStream(message);
@@ -832,8 +835,6 @@ public class ConsoleMainServer {
 				return null;
 			}
 			if (retObject instanceof JSONObject) {// Command to receive
-													// configuration parameters
-													// for concentrator front
 				try {
 					String type = ((JSONObject) retObject).get("type").toString();
 
@@ -842,6 +843,10 @@ public class ConsoleMainServer {
 					StringBuilder sb = new StringBuilder(Util.getCurrentTime() + " send down command is  ");
 					switch (type) {
 					case "mcast":
+						if (Statejudge() == 0){
+							System.out.println("now is inactive ,not allowed to send command");
+							break;
+						}
 						// System.out.println(222222);
 						buffer = Util.packetMcastSend(cmd);
 						if (buffer[2] == (byte) 0x00) {
@@ -860,7 +865,8 @@ public class ConsoleMainServer {
 							System.out.println(Util.getCurrentTime() + " wrong~~");
 						}
 						try {
-							TunSendToRootMessage(buffer);
+								TunSendToRootMessage(buffer);
+
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -884,14 +890,23 @@ public class ConsoleMainServer {
 						}
 
 						try {
-							TunSendToRootMessage(buffer);
+							if (Statejudge() == 1){
+								TunSendToRootMessage(buffer);
+							}else {
+								System.out.println("now is inactive ,not allowed to send command");
+							}
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 						break;
 					case "mcast_ack":
+						if (Statejudge() == 0){
+							System.out.println("now is inactive ,not allowed to send command");
+							break;
+						}
 						buffer = Util.packetMcastSend(cmd);
+						//System.out.println(buffer[2]);
 						if (buffer[2] == (byte) 0x41) {
 							System.out.println(Util.getCurrentTime() + " command is sending back NetMonitor data");
 							sb.append("周期配置");
@@ -910,12 +925,13 @@ public class ConsoleMainServer {
 						}else if (buffer[2] == (byte) 0xC4) {
 							System.out.println(Util.getCurrentTime() + " command is check node");
 							sb.append("multicast节点查询command");
+						
 						}else {
 							System.out.println(Util.getCurrentTime() + " wrong~~");
 						}
-
 						try {
-							TunSendToRootMessage(buffer);
+								TunSendToRootMessage(buffer);
+
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -936,23 +952,50 @@ public class ConsoleMainServer {
 						}
 
 						try {
-							TunSendToRootMessage(buffer);
+							if (Statejudge() == 1){
+								TunSendToRootMessage(buffer);
+							}else {
+								System.out.println("now is inactive ,not allowed to send command");
+							}
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 						break;
+					case "debug":// debug schedule
+						try {
+							System.out.println(Util.getCurrentTime() + " command is debug schedule"
+									+ ((JSONObject) retObject).getString(("pama_data")));
+							sb.append("下发调度" + ((JSONObject) retObject).getString(("pama_data")));
+							JSONObject synJson = new JSONObject(((JSONObject) retObject).getString(("pama_data")));
 
+							synParameter.setBitmap(Util.formatByteStrBitmapToBytes(synJson.getString("bitmap")));
+							synParameter.setBit(synJson.getString("bitmap"));
+							synParameter.setFlag(true);
+							Util.writeSynConfigParamToFile(synParameter, "GSynConfig.json");
+							TunSendToRootMessage(
+									packScheduleConfigData((Util.formatByteStrBitmapToBytes(synJson.getString("bitmap")))));
+
+							synStateFlag = true;
+							synJson = null;
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						break;
 					case "schedule":// broadcast schedule
 						try {
 							System.out.println(Util.getCurrentTime() + " command is muticastconfig schedule"
 									+ ((JSONObject) retObject).getString(("pama_data")));
 							sb.append("下发调度" + ((JSONObject) retObject).getString(("pama_data")));
 							JSONObject synJson = new JSONObject(((JSONObject) retObject).getString(("pama_data")));
+							//System.out.println("QQQ"+synJson);
 							synParameter.setBitmap(Util.formatByteStrBitmapToBytes(synJson.getString("bitmap")));
 							synParameter.setBit(synJson.getString("bitmap"));
 							synParameter.setFlag(true);
 							Util.writeSynConfigParamToFile(synParameter, "GSynConfig.json");
+							//System.out.println("WWWWWWWWWWWWWWWWWWWWWW");
+							System.out.println(synJson.getString("bitmap"));
 							TunSendToRootMessage(packScheduleConfigData(
 									(Util.formatByteStrBitmapToBytes(synJson.getString("bitmap")))));
 
@@ -965,6 +1008,10 @@ public class ConsoleMainServer {
 						break;
 					// for use
 					case "pama_corr":
+						if (Statejudge() == 0){
+							System.out.println("now is inactive ,not allowed to send command");
+							break;
+						}
 						try {
 							currect_rate = Integer.valueOf(((JSONObject) retObject).getString(("pama_data")));
 							System.out.println(
@@ -1007,6 +1054,10 @@ public class ConsoleMainServer {
 						break;
 					// for use
 					case "pama_syn":
+						if (Statejudge() == 0){
+							System.out.println("now is inactive ,not allowed to send command");
+							break;
+						}
 						try {
 							System.out.println(
 									Util.getCurrentTime() + " command is change the change the schedule down period"
@@ -1028,9 +1079,10 @@ public class ConsoleMainServer {
 							byte[] bit = Util.formatByteStrBitmapToBytes(pama_synJson.getString("bitmap"));
 							CurrentTime currentTime = Util.getCurrentDateTime(Util.getCurrentDateTime());
 							System.out.println("!!!!!!!!!!!!!!!!!!");
-							SendToRootSynMsg(Util.getSynMessage(pama_synJson.getInt("seqNum"),
-									pama_synJson.getInt("level"), currentTime.getHour(), currentTime.getMinute(),
-									currentTime.getSecond(), pama_synJson.getInt("period"), bit));
+							
+								SendToRootSynMsg(Util.getSynMessage(pama_synJson.getInt("seqNum"),
+								pama_synJson.getInt("level"), currentTime.getHour(), currentTime.getMinute(),
+								currentTime.getSecond(), pama_synJson.getInt("period"), bit));
 							synStateFlag = true;
 							pama_synJson = null;
 						} catch (IOException e) {
@@ -1184,6 +1236,7 @@ public class ConsoleMainServer {
 						synParameter.setBitmap(Util.formatByteStrBitmapToBytes(synJson.getString("bitmap")));
 						synParameter.setBit(synJson.getString("bitmap"));
 						synParameter.setFlag(true);
+						//System.out.println("wwwwwwwwwwwwww");
 						Util.writeSynConfigParamToFile(synParameter, "GSynConfig.json");
 						TunSendToRootMessage(
 								packScheduleConfigData((Util.formatByteStrBitmapToBytes(synJson.getString("bitmap")))));
@@ -1668,12 +1721,12 @@ public class ConsoleMainServer {
 				bit[8*i+7-j] = eightBit[j];
 			}
 		}
-		System.out.print(" ");
+		//System.out.print(" ");
 		for (i = 0; i < 6; i++) {
 		}
-		System.out.println(" ");
+		//System.out.println(" ");
 		for (i = 0; i < 24; i++) {
-			System.out.print(i);
+			//System.out.print(i);
 			for (j = 0; j < 6; j++) {
 				//System.out.print(" " + bit[6 * i + j]);
 			}
@@ -1683,6 +1736,21 @@ public class ConsoleMainServer {
 //			i += 1;
 //		}
 		return bit;
+	}
+	
+	public static int Statejudge() {
+		String currenttime = Util.getCurrentTime();
+		String[] times = currenttime.substring(11).split(":");
+		int hour = Integer.parseInt(times[0]);
+		int minute = Integer.parseInt(times[1]);
+		int second = Integer.parseInt(times[2]);
+		byte[] bit = getbit();
+		int count = hour * 6 + minute / 10;
+		if (bit[count] == 1) {
+			return 1;
+		}else {
+			return 0;
+		}
 	}
 
 	public static int time_diffence(int active, byte[] bit) {
@@ -1698,26 +1766,72 @@ public class ConsoleMainServer {
 		if (active == 1) {
 			i = 1;
 			if (bit[count] == 1) {
-				if ((minutes * 60 + second) < 330) {
-					difference = 330 - (minutes * 60 + second);
+				if ((minutes * 60 + second) < 300) {
+					difference = 300 - (minutes * 60 + second);
 				} else if((minutes * 60 + second) > 480) {
 					while (bit[count + i] != 1) {
 						i += 1;
 					}
-					difference = (600 - (minutes * 60 + second)) + (i - 1) * 600 + 330;
+					difference = (600 - (minutes * 60 + second)) + (i - 1) * 600 + 300;
+				}else{
+					difference = 0;
 				}
 			} else {
 				while (bit[count + i] != 1) {
 					i += 1;
 				}
-				difference = (600 - (minutes * 60 + second)) + (i - 1) * 600 + 330;
+				difference = (600 - (minutes * 60 + second)) + (i - 1) * 600 + 300;
 			}
 		} else {
 			i = 1;
-			while (bit[count + i] != 0) {
-				i += 1;
+			if (bit[count] == 1) {
+				if ((minutes * 60 + second) < 300) {
+					difference = 330 - (minutes * 60 + second);
+				} else if((minutes * 60 + second) > 480) {
+					while (bit[count + i] != 0) {
+						i += 1;
+					}
+					difference = (600 - (minutes * 60 + second)) + (i - 1) * 600;
+				}else{
+					difference = 0;
+				}
+			} else {
+				while (bit[count + i] != 0) {
+					i += 1;
+				}
+				difference = (600 - (minutes * 60 + second)) + (i - 1) * 600;
 			}
-			difference = (600 - (minutes * 60 + second)) + (i - 1) * 600;
+		}
+		return difference;
+	}
+	
+	public static int time_different2(){
+		int difference = 0;
+		String currenttime = Util.getCurrentTime();
+		String[] times = currenttime.substring(11).split(":");
+		int hour = Integer.parseInt(times[0]);
+		int minute = Integer.parseInt(times[1]);
+		int second = Integer.parseInt(times[2]);
+		int minutes = minute % 10;
+		int count = hour * 6 + minute / 10;
+		int i = 1;
+		byte[] bit = getbit();
+		if(bit[count + 1] == 1 && bit[count] == 1){
+			difference = 0;
+		}
+		else if(bit[count + 1] == 1 && bit[count] == 0){
+			if((minutes * 60 + second) < 20) difference = 0;
+			else difference = time_diffence(1, bit);
+		}
+		else if(bit[count + 1] == 0 && bit[count] == 1){
+			difference = time_diffence(0, bit);
+		}
+		else if(bit[count + 1] == 0 && bit[count] == 0){
+			if((minutes * 60 + second)<20) difference = 0;
+			else difference = time_diffence(0, bit);
+		}
+		else {
+			System.out.println("error");
 		}
 		return difference;
 	}

@@ -29,6 +29,7 @@ public class GlobalDefines {
 		
 		public static final int G_DEF_ENERGY_CYCLETIME = 41;
 		public static final int G_DEF_ENERGY_CYCLETIMEDIRECTION = 43;
+		public static final int G_DEF_ENERGY_CURRENT = 54;
 		
 		
 //		public static final int send_power = ;

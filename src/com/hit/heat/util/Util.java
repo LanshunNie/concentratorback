@@ -1175,6 +1175,8 @@ public class Util {
 		byte timem = message[GlobalDefines.GlobalCollectView.G_DEF_CRO_TIME_MINUTE];
 		byte times = message[GlobalDefines.GlobalCollectView.G_DEF_CRO_TIME_SECOND];
 		String currenttime = timeh + ":" + timem + ":" + times;
+		
+		
 		// byte[] currenttime = new byte[1];
 		// System.arraycopy(message,
 		// GlobalDefines.GlobalCollectView.G_DEF_CRO_TIME_HOUR,
@@ -1182,9 +1184,11 @@ public class Util {
 		// System.out.println(currenttime + "!!!");
 		// 時間同步 1字節
 		byte SynTime = message[GlobalDefines.GlobalCollectView.G_DEF_ENERGY_SYNTIME];
-
+		byte[] Current = new byte[4];
+		System.arraycopy(message, GlobalDefines.GlobalCollectView.G_DEF_ENERGY_CURRENT, Current, 0, 4);
 		// 重启次数 1字節
 		int ReBoot = message[GlobalDefines.GlobalCollectView.G_DEF_ENERGY_REBOOT];
+
 		String NodeID = selfId.split(":")[selfId.split(":").length - 1];
 		int i = 0;
 		int lengthing = NodeID.length();
@@ -1194,7 +1198,7 @@ public class Util {
 		Energy ene = new Energy(NodeID, getLong(CPU_time), getLong(LPM_time), getLong(Send_time), getLong(Receive_time),
 				Util.getInt(Voltage), Util.formatByteToByteStr(ParentID), SynTime, "" + Util.getInt(Beacon),
 				Util.getInt(Num_neighbors), Util.getInt(Rtmetric), ReBoot, 0, getInt(cycleTime),
-				"" + cycleTimeDirection, "" + currenttime);
+				"" + cycleTimeDirection, "" + currenttime,bytetofloat(Current));
 
 		return ene;
 	}
@@ -1259,6 +1263,18 @@ public class Util {
             (byte) (a & 0xFF)  
         };  
     }  
+    
+    public static float bytetofloat(byte[] b) {    
+        int l;                                             
+        l = b[0];                                  
+        l &= 0xff;                                         
+        l |= ((long) b[1] << 8);                   
+        l &= 0xffff;                                       
+        l |= ((long) b[2] << 16);                  
+        l &= 0xffffff;                                     
+        l |= ((long) b[3] << 24);                  
+        return Float.intBitsToFloat(l);                    
+    } 
 	public static void main(String[] args) throws IOException, JSONException {
 		byte[] bitmap = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 16, 1, 1, 1, 1, 1, 1 };
 		Online_Judge(bitmap);

@@ -20,7 +20,7 @@ public class Energy {
 	private int cycleTime;
 	private String cycleTimeDirection;
 	private String Nodecurrenttime;
-
+	private float Current;
 	public int getReboot() {
 		return reboot;
 	}
@@ -39,7 +39,7 @@ public class Energy {
 
 	public Energy(String id, long cPU, long lPM, long send_time, long receive_time, int voltage, String ParentID,
 			int synTime, String beacon, int num_neighbors, int rtmetric, int r_reboot, int reboot, int cycleTime,
-			String cycleTimeDirection, String currenttime) {
+			String cycleTimeDirection, String currenttime,float current) {
 		super();
 		this.id = id;
 		this.CPU = cPU;
@@ -57,6 +57,8 @@ public class Energy {
 		this.cycleTime = cycleTime;
 		this.setCycleTimeDirection(cycleTimeDirection);
 		this.Nodecurrenttime = currenttime;
+		this.Current = current;
+		
 	}
 
 	public Energy() {
@@ -129,7 +131,15 @@ public class Energy {
 	public void setLPM(long lPM) {
 		LPM = lPM;
 	}
+	
+	public float getCurrent() {
+		return Current;
+	}
 
+	public void setCurrent(float current) {
+		Current = current;
+	}
+	
 	public long getSend_time() {
 		return Send_time;
 	}
